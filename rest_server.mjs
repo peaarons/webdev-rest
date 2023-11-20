@@ -128,10 +128,34 @@ app.get('/incidents', (req, res) => {
 app.put('/new-incident', (req, res) => {
     console.log(req.body); // uploaded data
 
+    
+
     let {case_number, date, time, code, incident, police_grid, neighborhood_number, block} = req.body;
 
-    const sql = `INSERT INTO Incidents (case_number, date, time, code, incident, police_grid, neighborhood_number, block) VALUES (?, ?, ?)`;
+    //check to see if exists already
+    const sqlCheck = `SELECT * FROM Incidents WHERE case_number = ?`;
+    const paramsCheck= [case_number];
+
+    console.log(sqlCheck);
+    console.log(paramsCheck);
+
+
+    dbSelect(sqlCheck, paramsCheck)
+    .then((rows) =>{
+        if (rows.length > 0) {
+            res.status(500).type('txt').send("The Case Number you entered is already in the database"); //already is in database
+        } 
+    }).catch((error) => {
+        console.error(error);
+        res.status(500).type('txt').send("Error");
+    });
+
+
+    //insert query
+    const sql = `INSERT INTO Incidents (case_number, date, time, code, incident, police_grid, neighborhood_number, block) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
     const params= [case_number, date, time, code, incident, police_grid, neighborhood_number, block]
+
 
     console.log(sql);
     console.log(params)
@@ -150,8 +174,43 @@ app.put('/new-incident', (req, res) => {
 // DELETE request handler for new crime incident
 app.delete('/remove-incident', (req, res) => {
     console.log(req.body); // uploaded data
+    let {case_number} = req.body;
+
     
-    res.status(200).type('txt').send('OK'); // <-- you may need to change this
+    //check if in database
+    const sqlCheck = `SELECT * FROM Incidents WHERE case_number = ?`;
+    const paramsCheck= [case_number];
+
+    console.log(sqlCheck);
+    console.log(paramsCheck);
+
+
+    dbSelect(sqlCheck, paramsCheck)
+    .then((rows) =>{
+        if (rows.length === 0) {
+            res.status(500).type('txt').send("The Case Number you entered is not in the database"); //already is in database
+        } 
+    }).catch((error) => {
+        console.error(error);
+        res.status(500).type('txt').send("Error");
+    });
+
+
+    //delete query
+    const sql = `DELETE FROM Incidents WHERE case_number = ?;`;
+    const params= [case_number]
+
+    console.log(sql);
+    console.log(params)
+
+    dbRun(sql, params)
+        .then(() => {
+            res.status(200).type('txt').send("Incident successfully deleted");
+        })
+        .catch((error) => {
+            console.error(error);
+            res.status(500).type('txt').send("Error");
+        });
 });
 
 /********************************************************************
