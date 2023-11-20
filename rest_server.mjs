@@ -60,9 +60,25 @@ app.get('/code', (req, res) => {
     console.log(req.query); 
 
     let codes = req.query.code;
-    if(!codes){
-        res.status(404).type('txt').send('No code provided');
-        return;
+    if(!codes || codes === ' '){
+        const sql = `SELECT code, incident_type FROM Codes `;
+        dbSelect(sql)
+        .then((rows) =>{
+            if (rows.length > 0) {
+                const transformedRows = rows.map(row => ({
+                    code: row.code,
+                    type: row.incident_type.toUpperCase() // Convert incident_type to uppercase
+                }));
+                res.status(200).type('json').send(transformedRows.map(row => JSON.stringify(row) + '\n').join('')); // Sending retrieved data directly     
+            } else {
+                res.status(404).type('txt').send('Codes not found ');
+            }
+    
+        })
+        .catch((error) => {
+            res.status (500).type('txt').send("Internal Service Error");
+    
+        });
     }
     codes=codes.split(',');
     const placeholders = codes.map(() => '?').join(',');
@@ -74,11 +90,15 @@ app.get('/code', (req, res) => {
     console.log(sql);
     console.log(params)
 
+
     dbSelect(sql, params)
     .then((rows) =>{
         if (rows.length > 0) {
-            
-            res.status(200).type('json').send(rows); // Sending retrieved data directly     
+            const transformedRows = rows.map(row => ({
+                code: row.code,
+                type: row.incident_type.toUpperCase() // Convert incident_type to uppercase
+            }));
+            res.status(200).type('json').send(transformedRows.map(row => JSON.stringify(row) + '\n').join('')); // Sending retrieved data directly     
         } else {
             res.status(404).type('txt').send('Codes not found ');
         }
