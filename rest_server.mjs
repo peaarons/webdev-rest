@@ -57,26 +57,35 @@ function dbRun(query, params) {
  ********************************************************************/
 // GET request handler for crime codes
 app.get('/code', (req, res) => {
-    console.log(req.query); // query object (key-value pairs after the ? in the url)
-    
-    let sql = 'SELECT * FROM  stpaul_crime';
- 
-    let params= [];
+    console.log(req.query); 
 
-    sql+= ' WHERE code = ?';
-    params.push(req.query.code);
-    params.push(req.query.type);
+    let codes = req.query.code;
+    if(!codes){
+        res.status(404).type('txt').send('No code provided');
+        return;
+    }
+    codes=codes.split(',');
+    const placeholders = codes.map(() => '?').join(',');
+
+    //const codeParam = req.query.code;
+    const sql = `SELECT code, incident_type FROM Codes WHERE code IN (${placeholders})`;
+    const params= codes;
 
     console.log(sql);
     console.log(params)
+
     dbSelect(sql, params)
     .then((rows) =>{
-        //this is sending the data
-        res.status(200).type('json').send(rows);
+        if (rows.length > 0) {
+            
+            res.status(200).type('json').send(rows); // Sending retrieved data directly     
+        } else {
+            res.status(404).type('txt').send('Codes not found ');
+        }
 
     })
     .catch((error) => {
-        res.status (500).type('txt').send(error);
+        res.status (500).type('txt').send("Internal Service Error");
 
     });
 });
