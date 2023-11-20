@@ -1,8 +1,5 @@
 import * as path from 'node:path';
 import * as url from 'node:url';
-
-// hello world
-
 import { default as express } from 'express';
 import { default as sqlite3 } from 'sqlite3';
 
@@ -59,10 +56,29 @@ function dbRun(query, params) {
  ***   REST REQUEST HANDLERS                                      *** 
  ********************************************************************/
 // GET request handler for crime codes
-app.get('/codes', (req, res) => {
+app.get('/code', (req, res) => {
     console.log(req.query); // query object (key-value pairs after the ? in the url)
     
-    res.status(200).type('json').send({}); // <-- you will need to change this
+    let sql = 'SELECT * FROM  stpaul_crime';
+ 
+    let params= [];
+
+    sql+= ' WHERE code = ?';
+    params.push(req.query.code);
+    params.push(req.query.type);
+
+    console.log(sql);
+    console.log(params)
+    dbSelect(sql, params)
+    .then((rows) =>{
+        //this is sending the data
+        res.status(200).type('json').send(rows);
+
+    })
+    .catch((error) => {
+        res.status (500).type('txt').send(error);
+
+    });
 });
 
 // GET request handler for neighborhoods
