@@ -99,6 +99,8 @@ app.get('/incidents', (req, res) => {
 app.put('/new-incident', (req, res) => {
     console.log(req.body); // uploaded data
     
+    let sql = "INSERT INTO Incidents (" + values + ")"
+    
     res.status(200).type('txt').send('OK'); // <-- you may need to change this
 });
 
