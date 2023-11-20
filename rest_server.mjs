@@ -107,11 +107,25 @@ app.get('/incidents', (req, res) => {
 // PUT request handler for new crime incident
 app.put('/new-incident', (req, res) => {
     console.log(req.body); // uploaded data
-    
-    let sql = "INSERT INTO Incidents (" + values + ")"
-    
-    res.status(200).type('txt').send('OK'); // <-- you may need to change this
+
+    let {case_number, date, time, code, incident, police_grid, neighborhood_number, block} = req.body;
+
+    const sql = `INSERT INTO Incidents (case_number, date, time, code, incident, police_grid, neighborhood_number, block) VALUES (?, ?, ?)`;
+    const params= [case_number, date, time, code, incident, police_grid, neighborhood_number, block]
+
+    console.log(sql);
+    console.log(params)
+
+    dbRun(sql, params)
+        .then(() => {
+            res.status(200).type('txt').send("Incident successfully added");
+        })
+        .catch((error) => {
+            console.error(error);
+            res.status(500).type('txt').send("Error");
+        });
 });
+    
 
 // DELETE request handler for new crime incident
 app.delete('/remove-incident', (req, res) => {
