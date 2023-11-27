@@ -6,7 +6,7 @@ import { default as sqlite3 } from 'sqlite3';
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const db_filename = path.join(__dirname, 'db', 'stpaul_crime.sqlite3');
 
-const port = 8000;
+const port = 8100;
 
 let app = express();
 app.use(express.json());
@@ -58,7 +58,6 @@ function dbRun(query, params) {
 // GET request handler for crime codes
 app.get('/code', (req, res) => {
     console.log(req.query); 
-
     let codes = req.query.code;
     if(!codes || codes === ' '){
         const sql = `SELECT code, incident_type FROM Codes `;
@@ -67,54 +66,119 @@ app.get('/code', (req, res) => {
             if (rows.length > 0) {
                 const transformedRows = rows.map(row => ({
                     code: row.code,
-                    type: row.incident_type.toUpperCase() // Convert incident_type to uppercase
+                    type: row.incident_type
                 }));
-                res.status(200).type('json').send(transformedRows.map(row => JSON.stringify(row) + '\n').join('')); // Sending retrieved data directly     
+                const formattedResponse = transformedRows
+                .map((row, index, array) =>{
+                    if (index !== array.length - 1) {
+                        return `{"code": ${row.code}, "type":  "${row.type}"},`;
+                    } else {
+                        return `{"code": ${row.code}, "type":  "${row.type}"}`;
+                    }
+                })
+                .join('\n');
+                res.status(200).type('json').send(formattedResponse); 
             } else {
                 res.status(404).type('txt').send('Codes not found ');
             }
-    
         })
         .catch((error) => {
             res.status (500).type('txt').send("Internal Service Error");
-    
         });
     }
     codes=codes.split(',');
     const placeholders = codes.map(() => '?').join(',');
 
-    //const codeParam = req.query.code;
     const sql = `SELECT code, incident_type FROM Codes WHERE code IN (${placeholders})`;
     const params= codes;
-
     console.log(sql);
     console.log(params)
-
 
     dbSelect(sql, params)
     .then((rows) =>{
         if (rows.length > 0) {
             const transformedRows = rows.map(row => ({
                 code: row.code,
-                type: row.incident_type.toUpperCase() // Convert incident_type to uppercase
+                type: row.incident_type
             }));
-            res.status(200).type('json').send(transformedRows.map(row => JSON.stringify(row) + '\n').join('')); // Sending retrieved data directly     
+            const formattedResponse = transformedRows
+            .map((row, index, array) =>{
+                if (index !== array.length - 1) {
+                    return `{"code": ${row.code}, "type":  "${row.type}"},`;
+                } else {
+                    return `{"code": ${row.code}, "type":  "${row.type}"}`;
+                }
+            })
+            .join('\n');
+            res.status(200).type('json').send(formattedResponse); 
         } else {
             res.status(404).type('txt').send('Codes not found ');
         }
-
     })
     .catch((error) => {
         res.status (500).type('txt').send("Internal Service Error");
-
     });
 });
 
 // GET request handler for neighborhoods
 app.get('/neighborhoods', (req, res) => {
-    console.log(req.query); // query object (key-value pairs after the ? in the url)
-    
-    res.status(200).type('json').send({}); // <-- you will need to change this
+    let id = req.query.id;
+    if (!id || id.trim() === '') {
+        const sql = `SELECT neighborhood_number, neighborhood_name FROM Neighborhoods `;
+        dbSelect(sql)
+            .then((rows) => {
+                if (rows.length > 0) {
+                    const transformedRows = rows.map(row => ({
+                        id: row.neighborhood_number,
+                        name: row.neighborhood_name
+                    }));
+                    const formattedResponse = transformedRows
+                    .map((row, index, array) =>{
+                        if (index !== array.length - 1) {
+                            return `{"id": ${row.id}, "name":  "${row.name}"},`;
+                        } else {
+                            return `{"id": ${row.id}, "name":  "${row.name}"}`;
+                        }
+                    })
+                    .join('\n');
+                    res.status(200).type('json').send(formattedResponse); 
+                } else {
+                    res.status(404).type('txt').send('Neighborhoods not found');
+                }
+            })
+            .catch((error) => {
+                res.status(500).type('txt').send("Internal Service Error");
+            });
+    } else {
+        id = id.split(',');
+        const placeholders = id.map(() => '?').join(',');
+        const sql = `SELECT neighborhood_number, neighborhood_name FROM Neighborhoods WHERE neighborhood_number IN (${placeholders})`;
+        
+        dbSelect(sql, id)
+            .then((rows) => {
+                if (rows.length > 0) {
+                    const transformedRows = rows.map(row => ({
+                        id: row.neighborhood_number,
+                        name: row.neighborhood_name
+                    }));
+                    const formattedResponse = transformedRows
+                    .map((row, index, array) =>{
+                        if (index !== array.length - 1) {
+                            return `{"id": ${row.id}, "name":  "${row.name}"},`;
+                        } else {
+                            return `{"id": ${row.id}, "name":  "${row.name}"}`;
+                        }
+                    })
+                    .join('\n');
+                    res.status(200).type('json').send(formattedResponse); 
+                } else {
+                    res.status(404).type('txt').send('Neighborhoods not found');
+                }
+            })
+            .catch((error) => {
+                res.status(500).type('txt').send("Internal Service Error");
+            });
+    }
 });
 
 // GET request handler for crime incidents
