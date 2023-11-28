@@ -130,7 +130,7 @@ app.put('/new-incident', (req, res) => {
 
     
 
-    let {case_number, date, time, code, incident, police_grid, neighborhood_number, block} = req.body;
+    let {case_number, date_time, code, incident, police_grid, neighborhood_number, block} = req.body;
 
     //check to see if exists already
     const sqlCheck = `SELECT * FROM Incidents WHERE case_number = ?`;
@@ -152,9 +152,9 @@ app.put('/new-incident', (req, res) => {
 
 
     //insert query
-    const sql = `INSERT INTO Incidents (case_number, date, time, code, incident, police_grid, neighborhood_number, block) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-    const params= [case_number, date, time, code, incident, police_grid, neighborhood_number, block]
+    const sql = `INSERT INTO Incidents (case_number, date_time, code, incident, police_grid, neighborhood_number, block) 
+    VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    const params= [case_number, date_time, code, incident, police_grid, neighborhood_number, block]
 
 
     console.log(sql);
@@ -188,7 +188,7 @@ app.delete('/remove-incident', (req, res) => {
     dbSelect(sqlCheck, paramsCheck)
     .then((rows) =>{
         if (rows.length === 0) {
-            res.status(500).type('txt').send("The Case Number you entered is not in the database"); //already is in database
+            res.status(500).type('txt').send("The Case Number you entered is not in the database");
         } 
     }).catch((error) => {
         console.error(error);
