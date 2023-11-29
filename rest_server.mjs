@@ -130,7 +130,18 @@ app.put('/new-incident', (req, res) => {
 
     
 
-    let {case_number, date_time, code, incident, police_grid, neighborhood_number, block} = req.body;
+    let {case_number, date_time, date, time, code, incident, police_grid, neighborhood_number, block} = req.body;
+
+    //for if the user enters a date without a time or a time without a date instead of a DATETIME
+    if(date_time===undefined && (time!=undefined || date!=undefined)){
+        if(time===undefined){
+            time = 'time undefined'
+        }
+        if(date===undefined){
+            date = 'date undefined'
+        }
+        date_time = date + ' ' + time
+    }
 
     //check to see if exists already
     const sqlCheck = `SELECT * FROM Incidents WHERE case_number = ?`;
