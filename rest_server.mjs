@@ -57,7 +57,7 @@ function dbRun(query, params) {
  ********************************************************************/
 // GET request handler for crime codes
 app.get('/code', (req, res) => {
-    console.log(req.query); 
+   // console.log(req.query); 
     let codes = req.query.code;
     if(!codes || codes === ' '){
         const sql = `SELECT code, incident_type FROM Codes `;
@@ -183,16 +183,64 @@ app.get('/neighborhoods', (req, res) => {
 
 // GET request handler for crime incidents
 app.get('/incidents', (req, res) => {
-    console.log(req.query); // query object (key-value pairs after the ? in the url)
+        const startDate = req.query.start_date || '1900-01-01';
+        const endDate = req.query.end_date || startDate;
+        const codes = req.query.code ? req.query.code.split(',') : [];
+        const grids = req.query.grid ? req.query.grid.split(',') : [];
+        const neighborhoods = req.query.neighborhood ? req.query.neighborhood.split(',') : [];
+        const limit = req.query.limit ? parseInt(req.query.limit) : 1000;
     
-    res.status(200).type('json').send({}); // <-- you will need to change this
-});
+        let sql = `SELECT case_number, DATE(date_time) as date, TIME(date_time) as time, code, incident, police_grid, neighborhood_number, block 
+                   FROM Incidents 
+                   WHERE DATE(date_time) BETWEEN ? AND ?`;
+    
+        const queryParams = [startDate, endDate];
+    
+        if (codes.length > 0) {
+            sql += ` AND code IN (${codes.map(() => '?').join(',')})`;
+            queryParams.push(...codes);
+        }
+    
+        if (grids.length > 0) {
+            sql += ` AND police_grid IN (${grids.map(() => '?').join(',')})`;
+            queryParams.push(...grids);
+        }
+    
+        if (neighborhoods.length > 0) {
+            sql += ` AND neighborhood_number IN (${neighborhoods.map(() => '?').join(',')})`;
+            queryParams.push(...neighborhoods);
+        }
+    
+        sql += ` ORDER BY date_time DESC LIMIT ?`;
+        queryParams.push(limit);
+    
+        dbSelect(sql, queryParams)
+            .then((rows) => {
+                if (rows.length > 0) {
+                    const formattedResponse = rows.map(row => ({
+                        case_number: row.case_number,
+                        date: row.date,
+                        time: row.time,
+                        code: row.code,
+                        incident: row.incident,
+                        police_grid: row.police_grid,
+                        neighborhood_number: row.neighborhood_number,
+                        block: row.block
+                    }));
+                    res.status(200).type('json').send(JSON.stringify(formattedResponse, null, 2));
+                } else {
+                    res.status(404).type('txt').send('Incidents not found');
+                }
+            })
+            .catch((error) => {
+                res.status(500).type('txt').send("Internal Service Error");
+            });
+    });
+
 
 // PUT request handler for new crime incident
 app.put('/new-incident', (req, res) => {
     console.log(req.body); // uploaded data
-
-    
 
     let {case_number, date, time, code, incident, police_grid, neighborhood_number, block} = req.body;
 
@@ -202,7 +250,6 @@ app.put('/new-incident', (req, res) => {
 
     console.log(sqlCheck);
     console.log(paramsCheck);
-
 
     dbSelect(sqlCheck, paramsCheck)
     .then((rows) =>{
@@ -214,12 +261,10 @@ app.put('/new-incident', (req, res) => {
         res.status(500).type('txt').send("Error");
     });
 
-
     //insert query
     const sql = `INSERT INTO Incidents (case_number, date, time, code, incident, police_grid, neighborhood_number, block) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
     const params= [case_number, date, time, code, incident, police_grid, neighborhood_number, block]
-
 
     console.log(sql);
     console.log(params)
@@ -234,20 +279,17 @@ app.put('/new-incident', (req, res) => {
         });
 });
     
-
 // DELETE request handler for new crime incident
 app.delete('/remove-incident', (req, res) => {
     console.log(req.body); // uploaded data
     let {case_number} = req.body;
 
-    
     //check if in database
     const sqlCheck = `SELECT * FROM Incidents WHERE case_number = ?`;
     const paramsCheck= [case_number];
 
     console.log(sqlCheck);
     console.log(paramsCheck);
-
 
     dbSelect(sqlCheck, paramsCheck)
     .then((rows) =>{
@@ -258,7 +300,6 @@ app.delete('/remove-incident', (req, res) => {
         console.error(error);
         res.status(500).type('txt').send("Error");
     });
-
 
     //delete query
     const sql = `DELETE FROM Incidents WHERE case_number = ?;`;
