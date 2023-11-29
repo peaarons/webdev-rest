@@ -241,8 +241,19 @@ app.get('/incidents', (req, res) => {
 // PUT request handler for new crime incident
 app.put('/new-incident', (req, res) => {
     console.log(req.body); // uploaded data
+    let {case_number, date_time, date, time, code, incident, police_grid, neighborhood_number, block} = req.body;
 
-    let {case_number, date, time, code, incident, police_grid, neighborhood_number, block} = req.body;
+
+    //for if the user enters a date without a time or a time without a date instead of a DATETIME
+    if(date_time===undefined && (time!=undefined || date!=undefined)){
+        if(time===undefined){
+            time = 'time undefined'
+        }
+        if(date===undefined){
+            date = 'date undefined'
+        }
+        date_time = date + ' ' + time
+    }
 
     //check to see if exists already
     const sqlCheck = `SELECT * FROM Incidents WHERE case_number = ?`;
@@ -261,10 +272,12 @@ app.put('/new-incident', (req, res) => {
         res.status(500).type('txt').send("Error");
     });
 
+
     //insert query
     const sql = `INSERT INTO Incidents (case_number, date, time, code, incident, police_grid, neighborhood_number, block) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
     const params= [case_number, date, time, code, incident, police_grid, neighborhood_number, block]
+
 
     console.log(sql);
     console.log(params)
@@ -294,7 +307,7 @@ app.delete('/remove-incident', (req, res) => {
     dbSelect(sqlCheck, paramsCheck)
     .then((rows) =>{
         if (rows.length === 0) {
-            res.status(500).type('txt').send("The Case Number you entered is not in the database"); //already is in database
+            res.status(500).type('txt').send("The Case Number you entered is not in the database");
         } 
     }).catch((error) => {
         console.error(error);
