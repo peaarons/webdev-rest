@@ -2,6 +2,7 @@ import * as path from 'node:path';
 import * as url from 'node:url';
 import { default as express } from 'express';
 import { default as sqlite3 } from 'sqlite3';
+import { transcode } from 'node:buffer';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const db_filename = path.join(__dirname, 'db', 'stpaul_crime.sqlite3');
@@ -72,14 +73,14 @@ app.get('/code', (req, res) => {
                         code: row.code,
                         type: row.incident_type
                     }));
-                    res.status(200).json(transformedRows);
-                }else{
-                    res.status(404).json([]);
-                }
-            })
+                    res.status(200).type('json').send(transformedRows);
+                    } else {
+                        res.status(404).type('json').send(`Code ${codes} not found`)
+                    }
+                })
+            //format the response in JSON
             .catch((error) => {
-            //internal service error
-            res.status (500).type('txt').send("Internal Service Error");
+                res.status (500).type('txt').send(error)
             });
     }else{
         //split comma-seperated code
@@ -102,14 +103,14 @@ app.get('/code', (req, res) => {
                         code: row.code,
                         type: row.incident_type
                      }));
-                     res.status(200).json(transformedRows);
-                }else{
-                    res.status(404).json([]);
-                }
-            })
+                     res.status(200).type('json').send(transformedRows);
+                    } else {
+                        res.status(404).type('json').send(`Code ${codes} not found`)
+                    }
+                })
             //format the response in JSON
             .catch((error) => {
-                res.status (500).type('txt').send("Internal Service Error");
+                res.status (500).type('txt').send(error)
             });
     }
 });
@@ -131,9 +132,9 @@ app.get('/neighborhoods', (req, res) => {
                         id: row.neighborhood_number,
                         name: row.neighborhood_name
                     }));
-                    res.status(200).type('json').send(formattedResponse); 
+                    res.status(200).type('json').send(transformedRows);
                 } else {
-                    res.status(404).type('txt').send('Neighborhoods not found');
+                    res.status(404).type('json').send(`neighborhoods ${id} not found`)
                 }
             })
             .catch((error) => {
@@ -155,9 +156,9 @@ app.get('/neighborhoods', (req, res) => {
                         id: row.neighborhood_number,
                         name: row.neighborhood_name
                     }));
-                    res.status(200).type('json').send(formattedResponse); 
+                    res.status(200).type('json').send(transformedRows);
                 } else {
-                    res.status(404).type('txt').send('Neighborhoods not found');
+                    res.status(404).type('json').send(`neighborhoods ${id} not found`)
                 }
             })
             .catch((error) => {
