@@ -58,82 +58,62 @@ function dbRun(query, params) {
 // GET request handler for crime codes
 //http://localhost:8100/code?code=
 app.get('/code', (req, res) => {
-   // get codes from query parameters
+    // get codes from query parameters
     let codes = req.query.code;
     //if no code or empty space then get all codes
     if(!codes || codes === ' '){
         //SQL query get all codes and incident types
         const sql = `SELECT code, incident_type FROM Codes `;
         dbSelect(sql)
-        .then((rows) =>{
-            if (rows.length > 0) {
-                //change rows into an array of code and incident_type object
-                const transformedRows = rows.map(row => ({
-                    code: row.code,
-                    type: row.incident_type
-                }));
-                //formate the response in JSON
-                const formattedResponse = transformedRows
-                .map((row, index, array) =>{
-                    if (index !== array.length - 1) {
-                        return `{"code": ${row.code}, "type":  "${row.type}"},`;
-                    } else {
-                        return `{"code": ${row.code}, "type":  "${row.type}"}`;
-                    }
-                })
-                .join('\n');
-                //send formatted response
-                res.status(200).type('json').send(formattedResponse); 
-            } else {
-                //if no codes are found
-                res.status(404).type('txt').send('Codes not found ');
-            }
-        })
-        .catch((error) => {
-            //internal service error
-            res.status (500).type('txt').send("Internal Service Error");
-        });
-    }
-    //split comma-seperated code
-    codes=codes.split(',');
-    //create placeholders for SQL query
-    const placeholders = codes.map(() => '?').join(',');
-    //SQL query select specific codes and incident types
-    const sql = `SELECT code, incident_type FROM Codes WHERE code IN (${placeholders})`;
-    const params= codes;
-    //console log SQL query and Parameters
-    console.log(sql);
-    console.log(params)
-    //select codes based on the parameters
-    dbSelect(sql, params)
-    .then((rows) =>{
-        if (rows.length > 0) {
-            //transform rows into an array of code
-            const transformedRows = rows.map(row => ({
-                code: row.code,
-                type: row.incident_type
-            }));
-            //format the response in JSON
-            const formattedResponse = transformedRows
-            .map((row, index, array) =>{
-                if (index !== array.length - 1) {
-                    return `{"code": ${row.code}, "type":  "${row.type}"},`;
-                } else {
-                    return `{"code": ${row.code}, "type":  "${row.type}"}`;
+            .then((rows) =>{
+                if (rows.length > 0) {
+                    //change rows into an array of code and incident_type object
+                    const transformedRows = rows.map(row => ({
+                        code: row.code,
+                        type: row.incident_type
+                    }));
+                    res.status(200).json(transformedRows);
+                }else{
+                    res.status(404).json([]);
                 }
             })
-            .join('\n');
-            //send the formatted response
-            res.status(200).type('json').send(formattedResponse); 
-        } else {
-            //no specifci code found
-            res.status(404).type('txt').send('Codes not found ');
-        }
-    })
-    .catch((error) => {
-        res.status (500).type('txt').send("Internal Service Error");
-    });
+            .catch((error) => {
+            //internal service error
+            res.status (500).type('txt').send("Internal Service Error");
+            });
+    }else{
+        //split comma-seperated code
+        codes=codes.split(',');
+        //create placeholders for SQL query
+        const placeholders = codes.map(() => '?').join(',');
+        //SQL query select specific codes and incident types
+        const sql = `SELECT code, incident_type FROM Codes WHERE code IN (${placeholders})`;
+        const params= codes;
+        //console log SQL query and Parameters
+        //console.log(sql);
+        //console.log(params)
+
+        //select codes based on the parameters
+        dbSelect(sql, params)
+            .then((rows) => {
+                if (rows.length > 0) {
+                    //transform rows into an array of code
+                    const transformedRows = rows.map(row => ({
+                        code: row.code,
+                        type: row.incident_type
+                     }));
+                     res.status(200).json(transformedRows);
+                }else{
+                    res.status(404).json([]);
+                }
+            })
+            //format the response in JSON
+            .catch((error) => {
+                res.status (500).type('txt').send("Internal Service Error");
+            });
+    }
 });
+
 //http://localhost:8100/neighborhoods?id=
 // GET request handler for neighborhoods
 app.get('/neighborhoods', (req, res) => {
@@ -151,17 +131,6 @@ app.get('/neighborhoods', (req, res) => {
                         id: row.neighborhood_number,
                         name: row.neighborhood_name
                     }));
-                    //format the response in JSON
-                    const formattedResponse = transformedRows
-                    .map((row, index, array) =>{
-                        if (index !== array.length - 1) {
-                            return `{"id": ${row.id}, "name":  "${row.name}"},`;
-                        } else {
-                            return `{"id": ${row.id}, "name":  "${row.name}"}`;
-                        }
-                    })
-                    .join('\n');
-                    //send formatted response
                     res.status(200).type('json').send(formattedResponse); 
                 } else {
                     res.status(404).type('txt').send('Neighborhoods not found');
@@ -177,8 +146,8 @@ app.get('/neighborhoods', (req, res) => {
         const placeholders = id.map(() => '?').join(',');
         //SQL query to select specific neighbohoods based on ID
         const sql = `SELECT neighborhood_number, neighborhood_name FROM Neighborhoods WHERE neighborhood_number IN (${placeholders})`;
-        
-        dbSelect(sql, id)
+        const params = id;
+        dbSelect(sql, params)
             .then((rows) => {
                 if (rows.length > 0) {
                     //transform rows into an array of objects with ID and name
@@ -186,17 +155,6 @@ app.get('/neighborhoods', (req, res) => {
                         id: row.neighborhood_number,
                         name: row.neighborhood_name
                     }));
-                    //format in JSON
-                    const formattedResponse = transformedRows
-                    .map((row, index, array) =>{
-                        if (index !== array.length - 1) {
-                            return `{"id": ${row.id}, "name":  "${row.name}"},`;
-                        } else {
-                            return `{"id": ${row.id}, "name":  "${row.name}"}`;
-                        }
-                    })
-                    .join('\n');
-                    //send the formatted response
                     res.status(200).type('json').send(formattedResponse); 
                 } else {
                     res.status(404).type('txt').send('Neighborhoods not found');
@@ -271,7 +229,7 @@ app.get('/incidents', (req, res) => {
 //curl -X PUT “http://localhost:8000/new-incident” -H “Content-Type: application/json” -d “{\”case_number\”: 1234, \”date\”: \”2023-11-23\”, \”incident\”: \”student michief\”}
 // PUT request handler for new crime incident
 app.put('/new-incident', (req, res) => {
-    console.log(req.body); // uploaded data
+    //console.log(req.body); // uploaded data
     let {case_number, date_time, date, time, code, incident, police_grid, neighborhood_number, block} = req.body;
 
     //for if the user enters a date without a time or a time without a date instead of a DATETIME
@@ -296,68 +254,67 @@ app.put('/new-incident', (req, res) => {
     .then((rows) =>{
         if (rows.length > 0) {
             res.status(500).type('txt').send("The Case Number you entered is already in the database"); //already is in database
-        } 
+        } else{
+             //insert query
+            const sql = `INSERT INTO Incidents (case_number, date_time, code, incident, police_grid, neighborhood_number, block) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)`;
+            const params= [case_number, date_time, code, incident, police_grid, neighborhood_number, block]
+
+            console.log(sql);
+            console.log(params)
+
+            dbRun(sql, params)
+                .then(() => {
+                    res.status(200).type('txt').send("Incident successfully added");
+                 })
+                .catch((error) => {
+                    console.error(error);
+                    res.status(500).type('txt').send("Error");
+                 });
+        }
     }).catch((error) => {
         console.error(error);
         res.status(500).type('txt').send("Error");
-    });
-
-    //insert query
-    const sql = `INSERT INTO Incidents (case_number, date_time, code, incident, police_grid, neighborhood_number, block) 
-    VALUES (?, ?, ?, ?, ?, ?, ?)`;
-    const params= [case_number, date_time, code, incident, police_grid, neighborhood_number, block]
-
-    console.log(sql);
-    console.log(params)
-
-    dbRun(sql, params)
-        .then(() => {
-            res.status(200).type('txt').send("Incident successfully added");
-        })
-        .catch((error) => {
-            console.error(error);
-            res.status(500).type('txt').send("Error");
-        });
+    }); 
 });
 
 //curl -X DELETE “http://localhost:8000/remove-incident” -H “Content-Type: application/json” -d “{\”case_number\”: 1234}”
 // DELETE request handler for new crime incident
 app.delete('/remove-incident', (req, res) => {
-    console.log(req.body); // uploaded data
+    //console.log(req.body); // uploaded data
     let {case_number} = req.body;
 
     //check if in database
     const sqlCheck = `SELECT * FROM Incidents WHERE case_number = ?`;
     const paramsCheck= [case_number];
 
-    console.log(sqlCheck);
-    console.log(paramsCheck);
+    //console.log(sqlCheck);
+    //console.log(paramsCheck);
 
     dbSelect(sqlCheck, paramsCheck)
-    .then((rows) =>{
-        if (rows.length === 0) {
-            res.status(500).type('txt').send("The Case Number you entered is not in the database");
-        } 
-    }).catch((error) => {
-        console.error(error);
-        res.status(500).type('txt').send("Error");
-    });
-
-    //delete query
-    const sql = `DELETE FROM Incidents WHERE case_number = ?;`;
-    const params= [case_number]
-
-    console.log(sql);
-    console.log(params)
-
-    dbRun(sql, params)
-        .then(() => {
-            res.status(200).type('txt').send("Incident successfully deleted");
+        .then((rows) =>{
+            if (rows.length === 0) {
+                res.status(500).type('txt').send("The Case Number you entered is not in the database");
+            }else{
+                //delete query
+                const sql = `DELETE FROM Incidents WHERE case_number = ?;`;
+                const params= [case_number]
+                //console.log(sql);
+                //console.log(params)
+                dbRun(sql, params)
+                    .then(() => {
+                        res.status(200).type('txt').send("Incident successfully deleted");
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                        res.status(500).type('txt').send("Error");
+                    });
+            } 
         })
         .catch((error) => {
             console.error(error);
             res.status(500).type('txt').send("Error");
-        });
+        });    
 });
 
 /********************************************************************
