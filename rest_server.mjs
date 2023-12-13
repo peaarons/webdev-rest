@@ -58,114 +58,58 @@ function dbRun(query, params) {
  ********************************************************************/
 // GET request handler for crime codes
 //http://localhost:8100/code?code=
-app.get('/code', (req, res) => {
-    // get codes from query parameters
-    let codes = req.query.code;
-    //if no code or empty space then get all codes
-    if(!codes || codes === ' '){
-        //SQL query get all codes and incident types
-        const sql = `SELECT code, incident_type FROM Codes `;
-        dbSelect(sql)
-            .then((rows) =>{
-                if (rows.length > 0) {
-                    //change rows into an array of code and incident_type object
-                    const transformedRows = rows.map(row => ({
-                        code: row.code,
-                        type: row.incident_type
-                    }));
-                    res.status(200).type('json').send(transformedRows);
-                    } else {
-                        res.status(404).type('json').send(`Code ${codes} not found`)
-                    }
-                })
-            //format the response in JSON
-            .catch((error) => {
-                res.status (500).type('txt').send(error)
-            });
-    }else{
-        //split comma-seperated code
-        codes=codes.split(',');
-        //create placeholders for SQL query
-        const placeholders = codes.map(() => '?').join(',');
-        //SQL query select specific codes and incident types
-        const sql = `SELECT code, incident_type FROM Codes WHERE code IN (${placeholders})`;
-        const params= codes;
-        //console log SQL query and Parameters
-        //console.log(sql);
-        //console.log(params)
+app.get('/codes', (req, res) => {
+    //console.log(req.query); // query object (key-value pairs after the ? in the url)
 
-        //select codes based on the parameters
-        dbSelect(sql, params)
-            .then((rows) => {
-                if (rows.length > 0) {
-                    //transform rows into an array of code
-                    const transformedRows = rows.map(row => ({
-                        code: row.code,
-                        type: row.incident_type
-                     }));
-                     res.status(200).type('json').send(transformedRows);
-                    } else {
-                        res.status(404).type('json').send(`Code ${codes} not found`)
-                    }
-                })
-            //format the response in JSON
-            .catch((error) => {
-                res.status (500).type('txt').send(error)
-            });
+    let sql = 'SELECT code, incident_type as type FROM Codes';
+    let sqlparams = [];
+
+    if('code' in req.query){
+        const codes = req.query.code.split(',');
+        const placeholders = codes.map(() => '?').join(', ');
+
+        sql += ` WHERE code IN (${placeholders})`;
+        sqlparams = codes.map(code => parseInt(code));
     }
+    //Order from least to greatest
+    sql += " ORDER BY code;"
+   // console.log(sql);
+   // console.log('PARAMETER: ', sqlparams);
+
+    dbSelect(sql, sqlparams)
+    .then(rows=>{
+        //console.log(rows);
+        res.status(200).type('json').send(rows);
+    }).catch((error)=>{
+        res.status(500).type('txt').send(error);
+    });
 });
 
 //http://localhost:8100/neighborhoods?id=
 // GET request handler for neighborhoods
 app.get('/neighborhoods', (req, res) => {
-    //retrieve neigbohood ID from query parameters 
-    let id = req.query.id;
+    let sql = 'SELECT neighborhood_number as id, neighborhood_name as name FROM Neighborhoods';    
+    let sqlparams = [];
     //if no ID or empty retrieve all neighborhoods ID
-    if (!id || id.trim() === '') {
-        //SQL query to select all neighborhood numbers and names
-        const sql = `SELECT neighborhood_number, neighborhood_name FROM Neighborhoods `;
-        dbSelect(sql)
-            .then((rows) => {
-                if (rows.length > 0) {
-                    //change rpws into an arrat of object with ID and names
-                    const transformedRows = rows.map(row => ({
-                        id: row.neighborhood_number,
-                        name: row.neighborhood_name
-                    }));
-                    res.status(200).type('json').send(transformedRows);
-                } else {
-                    res.status(404).type('json').send(`neighborhoods ${id} not found`)
-                }
-            })
-            .catch((error) => {
-                res.status(500).type('txt').send("Internal Service Error");
-            });
-    } else {
-        //else split comma-seperated IDs provided
-        id = id.split(',');
-        //placeholder for SQl query
-        const placeholders = id.map(() => '?').join(',');
-        //SQL query to select specific neighbohoods based on ID
-        const sql = `SELECT neighborhood_number, neighborhood_name FROM Neighborhoods WHERE neighborhood_number IN (${placeholders})`;
-        const params = id;
-        dbSelect(sql, params)
-            .then((rows) => {
-                if (rows.length > 0) {
-                    //transform rows into an array of objects with ID and name
-                    const transformedRows = rows.map(row => ({
-                        id: row.neighborhood_number,
-                        name: row.neighborhood_name
-                    }));
-                    res.status(200).type('json').send(transformedRows);
-                } else {
-                    res.status(404).type('json').send(`neighborhoods ${id} not found`)
-                }
-            })
-            .catch((error) => {
-                //internal service error
-                res.status(500).type('txt').send("Internal Service Error");
-            });
+    if ('id' in req.query) {
+        const ids = req.query.id.split(',');
+        const placeholders = ids.map(() => '?').join(', ');
+        
+        sql += ` WHERE neighborhood_number IN (${placeholders})`;
+        sqlparams = ids.map(id => parseInt(id));
     }
+
+    sql += " ORDER BY id;"
+    console.log(sql);
+    console.log('PARAM: ', sqlparams);
+    dbSelect(sql, sqlparams)
+        .then((rows) => {
+            console.log(rows);
+            res.status(200).type('json').send(rows);
+            })
+        .catch((error) => {
+            res.status(500).type('txt').send(error);
+        });
 });
 
 // GET request handler for crime incidents
@@ -200,30 +144,15 @@ app.get('/incidents', (req, res) => {
             queryParams.push(...neighborhoods);
         }
         //adding ORDER By and limit clause to the SQL query
-        sql += ` ORDER BY date_time DESC LIMIT ?`;
+        sql += ` ORDER BY date_time ASC LIMIT ?`;
         queryParams.push(limit);
         //execute the SQL query with parameters
         dbSelect(sql, queryParams)
             .then((rows) => {
-                //formate the incidents foun in JSON
-                if (rows.length > 0) {
-                    const formattedResponse = rows.map(row => ({
-                        case_number: row.case_number,
-                        date: row.date,
-                        time: row.time,
-                        code: row.code,
-                        incident: row.incident,
-                        police_grid: row.police_grid,
-                        neighborhood_number: row.neighborhood_number,
-                        block: row.block
-                    }));
-                    res.status(200).type('json').send(JSON.stringify(formattedResponse, null, 2));
-                } else {
-                    res.status(404).type('txt').send('Incidents not found');
-                }
+                res.status(200).type('json').send(rows);
             })
             .catch((error) => {
-                res.status(500).type('txt').send("Internal Service Error");
+                res.status(500).type('txt').send(error);
             });
     });
 
@@ -254,7 +183,7 @@ app.put('/new-incident', (req, res) => {
     dbSelect(sqlCheck, paramsCheck)
     .then((rows) =>{
         if (rows.length > 0) {
-            res.status(500).type('txt').send("The Case Number you entered is already in the database"); //already is in database
+            res.status(409).type('txt').send("The Case Number you entered is already in the database"); //already is in database
         } else{
              //insert query
             const sql = `INSERT INTO Incidents (case_number, date_time, code, incident, police_grid, neighborhood_number, block) 
@@ -308,13 +237,13 @@ app.delete('/remove-incident', (req, res) => {
                     })
                     .catch((error) => {
                         console.error(error);
-                        res.status(500).type('txt').send("Error");
+                        res.status(500).type('txt').send(error);
                     });
             } 
         })
         .catch((error) => {
             console.error(error);
-            res.status(500).type('txt').send("Error");
+            res.status(500).type('txt').send(error);
         });    
 });
 

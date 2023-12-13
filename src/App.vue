@@ -64,18 +64,17 @@ onMounted(() => {
     .catch((error) => {
         console.log('Error:', error);
     });
+
+
+  
 });
 
 
 // FUNCTIONS
-// Function called once user has entered REST API URL
-function initializeCrimes() {
-    // TODO: get code and neighborhood data
-    //       get initial 1000 crimes
-}
+
 
 // Function called when user presses 'OK' on dialog box
-function closeDialog() {
+function closeDialogOk() {
     let dialog = document.getElementById('rest-dialog');
     let url_input = document.getElementById('dialog-url');
     if (crime_url.value !== '' && url_input.checkValidity()) {
@@ -86,21 +85,59 @@ function closeDialog() {
     else {
         dialog_err.value = true;
     }
+   
 }
+// Function called when user presses 'GO' on dialog box
+function closeDialogGo() {
+    let dialog = document.getElementById('rest-dialog');
+    let url_input = document.getElementById('dialog-url');
+    let loc_input = document.getElementById('dialog-loc');
+   
+    if(loc_input.value !== ''){
+        locationTest(loc_input.value);
+        dialog.close();
+    }
+}
+
+function locationTest(loc){
+    let url = 'https://nominatim.openstreetmap.org/search?q='+loc+'&format=json&&limit=1';
+    fetch(url)
+    .then((response)=>{
+        return response.json();
+    })
+    .then((data)=>{
+        if(data.length > 0){
+            let lat = data[0].lat;
+            let lon = data[0].lon;
+            map.leaflet.setView([lat, lon], 14);
+        }else{
+            console.log("Not found");
+        }
+        console.log(data);
+    })
+    .catch((error)=>{
+        console.log('Error:', error);
+    });
+}
+
 </script>
 
 <template>
-    <dialog id="rest-dialog" open>
+     <dialog id="rest-dialog" open>
         <h1 class="dialog-header">St. Paul Crime REST API</h1>
         <label class="dialog-label">URL: </label>
         <input id="dialog-url" class="dialog-input" type="url" v-model="crime_url" placeholder="http://localhost:8000" />
         <p class="dialog-error" v-if="dialog_err">Error: must enter valid URL</p>
         <br/>
-        <button class="button" type="button" @click="closeDialog">OK</button>
+        <button class="button" type="button" @click="closeDialogOk">OK</button>
     </dialog>
+
     <div class="grid-container ">
         <div class="grid-x grid-padding-x">
+            <label class="dialog-label">Location: </label>
+            <input id="dialog-loc" class="dialog-input" v-model="location" placeholder="Enter a location" />
             <div id="leafletmap" class="cell auto"></div>
+             <button class="button cell" type="button" @click="closeDialogGo">GO</button>
         </div>
     </div>
 </template>
