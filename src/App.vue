@@ -3,6 +3,8 @@ import { reactive, ref, onMounted } from 'vue'
 
 let crime_url = ref('');
 let dialog_err = ref(false);
+let location = ref('');
+let outsideMap_err = ref('');
 let map = reactive(
     {
         leaflet: null,
@@ -48,10 +50,11 @@ onMounted(() => {
         maxZoom: 18
     }).addTo(map.leaflet);
     map.leaflet.setMaxBounds([[44.883658, -93.217977], [45.008206, -92.993787]]);
+    map.leaflet.on('moveend', updateLocationInput);
 
     // Get boundaries for St. Paul neighborhoods
     let district_boundary = new L.geoJson();
-    district_boundary.addTo(map.leaflet);
+    
     fetch('data/StPaulDistrictCouncil.geojson')
     .then((response) => {
         return response.json();
@@ -59,6 +62,8 @@ onMounted(() => {
     .then((result) => {
         result.features.forEach((value) => {
             district_boundary.addData(value);
+            //update the value of the location box to the current address
+            district_boundary.addTo(map.leaflet);
         });
     })
     .catch((error) => {
@@ -88,36 +93,66 @@ function closeDialogOk() {
    
 }
 // Function called when user presses 'GO' on dialog box
+//44.9431° N, 93.1897° W St. Thomas Coordinates. Paris coordinates: 48.8566° N, 2.3522° E
 function closeDialogGo() {
     let dialog = document.getElementById('rest-dialog');
-    let url_input = document.getElementById('dialog-url');
-    let loc_input = document.getElementById('dialog-loc');
-   
+    let loc_input = document.getElementById('dialog-loc');  
     if(loc_input.value !== ''){
         locationTest(loc_input.value);
         dialog.close();
     }
 }
-
+//function for when entering a location it updates to that location on the map
 function locationTest(loc){
-    let url = 'https://nominatim.openstreetmap.org/search?q='+loc+'&format=json&&limit=1';
+    let url = 'https://nominatim.openstreetmap.org/search?q=' + loc + '&format=json&&limit=1';
     fetch(url)
     .then((response)=>{
         return response.json();
     })
     .then((data)=>{
+        console.log(data);  
         if(data.length > 0){
             let lat = data[0].lat;
             let lon = data[0].lon;
-            map.leaflet.setView([lat, lon], 14);
+            if( 
+                lat >= map.bounds.se.lat &&
+                lat <= map.bounds.nw.lat &&
+                lon >= map.bounds.nw.lng &&
+                lon <= map.bounds.se.lng
+            )
+            map.leaflet.setView([lat, lon], 17);
+            else{
+                console.log("Inputed location is outside of St. Paul");
+                map.leaflet.setView([map.center.lat, map.center.lng], map.zoom);
+            }
         }else{
             console.log("Not found");
         }
-        console.log(data);
+         
     })
     .catch((error)=>{
         console.log('Error:', error);
     });
+}
+//function for updating the location in the input box when you pan around the map. 
+function updateLocationInput(){
+    
+    const center = map.leaflet.getCenter();
+    const lat = center.lat.toFixed(6);
+    const lng = center.lng.toFixed(6);
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+    fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.display_name) {
+                map.center.address = data.display_name;
+                document.getElementById('dialog-loc').value = data.display_name;
+            }
+        })
+        .catch((error) => {
+            console.log('Error:', error);
+        });
+
 }
 
 </script>
@@ -132,13 +167,13 @@ function locationTest(loc){
         <button class="button" type="button" @click="closeDialogOk">OK</button>
     </dialog>
 
-    <div class="grid-container ">
+    <div class="grid-container">
         <div class="grid-x grid-padding-x">
             <label class="dialog-label">Location: </label>
             <input id="dialog-loc" class="dialog-input" v-model="location" placeholder="Enter a location" />
-            <div id="leafletmap" class="cell auto"></div>
-             <button class="button cell" type="button" @click="closeDialogGo">GO</button>
+            <button class="button cell" type="button" @click="closeDialogGo">GO</button>
         </div>
+        <div id="leafletmap" class="cell auto"></div>
     </div>
 </template>
 
@@ -171,4 +206,6 @@ function locationTest(loc){
     font-size: 1rem;
     color: #D32323;
 }
+
+
 </style>
