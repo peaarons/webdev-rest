@@ -20,23 +20,23 @@ let map = reactive(
             se: {lat: 44.883658, lng: -92.993787}
         },
         neighborhood_markers: [
-            {location: [44.942068, -93.020521], marker: null, name: 'Conway/Battlecreek/Highwood'},
-            {location: [44.977413, -93.025156], marker: null, name: 'Greater East Side'},
-            {location: [44.931244, -93.079578], marker: null, name: 'West Side'},
-            {location: [44.956192, -93.060189], marker: null, name: 'Dayton\'s Bluff'},
-            {location: [44.978883, -93.068163], marker: null, name: 'Payne/Phalen'},
-            {location: [44.975766, -93.113887], marker: null, name: 'North End'},
-            {location: [44.959639, -93.121271], marker: null, name: 'Thomas/Dale(Frogtown)'},
-            {location: [44.947700, -93.128505], marker: null, name: 'Summit/University'},
-            {location: [44.930276, -93.119911], marker: null, name: 'West Seventh'},
-            {location: [44.982752, -93.147910], marker: null, name: 'Como'},
-            {location: [44.963631, -93.167548], marker: null, name: 'Hamline/Midway'},
-            {location: [44.973971, -93.197965], marker: null, name: 'St. Anthony'},
-            {location: [44.949043, -93.178261], marker: null, name: 'Union Park'},
-            {location: [44.934848, -93.176736], marker: null, name: 'Macalester-Groveland'},
-            {location: [44.913106, -93.170779], marker: null, name: 'Highland'},
-            {location: [44.937705, -93.136997], marker: null, name: 'Summit Hill'},
-            {location: [44.949203, -93.093739], marker: null, name: 'Capitol River'}
+            {location: [44.942068, -93.020521], marker: 1, name: 'Conway/Battlecreek/Highwood'},
+            {location: [44.977413, -93.025156], marker: 2, name: 'Greater East Side'},
+            {location: [44.931244, -93.079578], marker: 3, name: 'West Side'},
+            {location: [44.956192, -93.060189], marker: 4, name: 'Dayton\'s Bluff'},
+            {location: [44.978883, -93.068163], marker: 5, name: 'Payne/Phalen'},
+            {location: [44.975766, -93.113887], marker: 6, name: 'North End'},
+            {location: [44.959639, -93.121271], marker: 7, name: 'Thomas/Dale(Frogtown)'},
+            {location: [44.947700, -93.128505], marker: 8, name: 'Summit/University'},
+            {location: [44.930276, -93.119911], marker: 9, name: 'West Seventh'},
+            {location: [44.982752, -93.147910], marker: 10, name: 'Como'},
+            {location: [44.963631, -93.167548], marker: 11, name: 'Hamline/Midway'},
+            {location: [44.973971, -93.197965], marker: 12, name: 'St. Anthony'},
+            {location: [44.949043, -93.178261], marker: 13, name: 'Union Park'},
+            {location: [44.934848, -93.176736], marker: 14, name: 'Macalester-Groveland'},
+            {location: [44.913106, -93.170779], marker: 15, name: 'Highland'},
+            {location: [44.937705, -93.136997], marker: 16, name: 'Summit Hill'},
+            {location: [44.949203, -93.093739], marker: 17, name: 'Capitol River'}
         ]
     }
 );
@@ -133,7 +133,7 @@ async function fetchJson(url) {
     }
 }
 function getNeighborhoodNameById(id) {
-  const neighborhood = neighborhoods.value.find(neighborhood => neighborhood.id === id);
+  const neighborhood = map.neighborhood_markers.find((marker) => marker.marker === id);
   return neighborhood ? neighborhood.name : null;
 }
 
@@ -276,7 +276,7 @@ const getRowStyle = (code) => {
     </thead>
     <tbody>
       <template v-if="crimeTableData.rows.length > 0">
-        <tr v-for="row in crimeTableData.rows" :key="row.case_number" :style="getRowStyle(row.code)">
+        <tr v-for="row in crimeTableData.rows.slice().reverse()" :key="row.case_number" :style="getRowStyle(row.code)">
           <!-- Render table rows -->
           <td>{{ row.case_number }}</td>
           <td>{{ row.date }}</td>
@@ -284,7 +284,7 @@ const getRowStyle = (code) => {
           <td>{{ row.code }}</td>
           <td>{{ row.incident }}</td>
           <td>{{ row.police_grid }}</td>
-          <td>{{ row.neighborhood_number }}</td>
+          <td>{{ getNeighborhoodNameById(row.neighborhood_number) }}</td>
           <td>{{ row.block }}</td>
         </tr>
       </template>
