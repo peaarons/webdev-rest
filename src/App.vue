@@ -4,6 +4,7 @@ import { reactive, ref, onMounted } from 'vue';
 
 let crime_url= ref('');
 let dialog_err = ref(false);
+
 let location = ref('');
 
 let map = reactive(
@@ -60,42 +61,37 @@ let crimeTableData = reactive({
 
 // Vue callback for once <template> HTML has been added to web page
 onMounted(() => {
-    // Create Leaflet map (set bounds and valied zoom levels)
-    map.leaflet = L.map('leafletmap').setView([map.center.lat, map.center.lng], map.zoom);
+       // Create Leaflet map (set bounds and valied zoom levels)
+       map.leaflet = L.map('leafletmap').setView([map.center.lat, map.center.lng], map.zoom);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         minZoom: 12,
         maxZoom: 18
     }).addTo(map.leaflet);
     map.leaflet.setMaxBounds([[44.883658, -93.217977], [45.008206, -92.993787]]);
-    //update the address in the input box while you move around the map. 
-    map.leaflet.on('moveend', updateLocationInput); 
+    map.leaflet.on('moveend', updateLocationInput);
 
     // Get boundaries for St. Paul neighborhoods
     let district_boundary = new L.geoJson();
     
     fetch('data/StPaulDistrictCouncil.geojson')
-
-    
     .then((response) => {
         return response.json();
     })
     .then((result) => {
         result.features.forEach((value) => {
-            //Blue box around St. Paul
             district_boundary.addData(value);
+            //update the value of the location box to the current address
             district_boundary.addTo(map.leaflet);
         });
-
     })
     .catch((error) => {
         console.log('Error:', error);
     });
     map.leaflet.on('moveend', () => {
     updateLocationInput();
-    fetchCrimeData();
     });
-
+    fetchCrimeData();
 });
 
 
@@ -132,12 +128,14 @@ async function fetchJson(url) {
         throw new Error(`Error fetching JSON: ${error.message}`);
     }
 }
+//use the markers to display the neighbhood name in the table. 
 function getNeighborhoodNameById(id) {
   const neighborhood = map.neighborhood_markers.find((marker) => marker.marker === id);
   return neighborhood ? neighborhood.name : null;
 }
 
 // Function called when user presses 'OK' on dialog box
+/*
 function closeDialogOk() {
     let dialog = document.getElementById('rest-dialog');
     let url_input = document.getElementById('dialog-url');
@@ -149,15 +147,14 @@ function closeDialogOk() {
         dialog_err.value = true;
     }
 }
+*/
 
 // Function called when user presses 'GO' on dialog box
 //44.9431° N, 93.1897° W St. Thomas Coordinates. Paris coordinates: 48.8566° N, 2.3522° E
-function closeDialogGo() {
-    let dialog = document.getElementById('rest-dialog');
+function closeGo() {
     let loc_input = document.getElementById('dialog-loc');  
     if(loc_input.value !== ''){
         locationTest(loc_input.value);
-        dialog.close();
     }
 }
 
@@ -186,15 +183,17 @@ function locationTest(loc){
             }
         }else{
             console.log("Not found");
-        }   
+        }
+         
     })
     .catch((error)=>{
         console.log('Error:', error);
     });
-}
+  }
 
 //function for updating the location in the input box when you pan around the map. 
-function updateLocationInput(){ 
+function updateLocationInput(){
+    
     const center = map.leaflet.getCenter();
     const lat = center.lat.toFixed(6);
     const lng = center.lng.toFixed(6);
@@ -210,6 +209,7 @@ function updateLocationInput(){
         .catch((error) => {
             console.log('Error:', error);
         });
+
 }
 
 //These two methods change the color of the row in the table based off of the code. 
@@ -246,7 +246,7 @@ const getRowStyle = (code) => {
     <div class="grid-x grid-padding-x">
       <label class="dialog-label">Location: </label>
       <input id="dialog-loc" class="dialog-input" v-model="location" placeholder="Enter a location" />
-      <button class="button cell" type="button" @click="closeDialogGo">GO</button>
+      <button class="button cell" type="button" @click="closeGo()">GO</button>
     </div>
     <div id="leafletmap" class="cell auto"></div>
   </div>
