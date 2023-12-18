@@ -239,6 +239,43 @@ import Modal from './components/insertModal.vue'
 
 const showModal = ref(false)
 
+import Modal2 from './components/deleteModal.vue'
+
+const showModal2 = ref(false)
+
+function deleteRow(caseNumber) {
+  if (confirm(`Are you sure you want to delete case number ${caseNumber}?`)) {
+    deleteData(caseNumber);
+  }
+}
+
+async function deleteData(caseNumber) {
+  try {
+    const response = await fetch(`http://localhost:8100/remove-incident`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ case_number: caseNumber })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    } else {
+      console.log("Successfully deleted");
+      crimeTableData.rows = crimeTableData.rows.filter(row => row.case_number !== caseNumber);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+
+  async function handleDeleteSuccess(deletedCaseNumber) {
+    console.log('wopo gangnam style')
+    crimeTableData.rows = crimeTableData.rows.filter(row => row.case_number !== deletedCaseNumber);
+  }
+
 
 </script>
 
@@ -282,16 +319,29 @@ const showModal = ref(false)
     </div>
   </div>
 
-  <button id="show-modal" @click="showModal = true" >Insert Crime</button>
+  <!--insert crime button-->
+  <button class="modal" @click="showModal = true" >Insert Case</button>
 
-<Teleport to="body">
-  <!-- use the modal component, pass in the prop -->
-  <modal :show="showModal" @close="showModal = false">
-    <template #header>
-      <h3>Insert Crime Form</h3>
-    </template>
-  </modal>
-</Teleport>
+  <Teleport to="body">
+    <!-- use the modal component, pass in the prop -->
+    <modal :show="showModal" @close="showModal = false">
+      <template #header>
+        <h3>Insert Crime Form</h3>
+      </template>
+    </modal>
+  </Teleport>
+
+  <!--delete crime button-->
+  <button class="modal" id="modal2" @click="showModal2 = true">Delete Case</button>
+
+  <Teleport to="body">
+    <!-- use the modal component, pass in the prop -->
+    <modal2 :show2="showModal2" @close="showModal2 = false" @delete-success="handleDeleteSuccess">
+      <template #header>
+        <h3>Insert Crime Form</h3>
+      </template>
+    </modal2>
+  </Teleport>
 
 <!-- Table -->
   <table>
@@ -304,7 +354,7 @@ const showModal = ref(false)
       <template v-if="crimeTableData.rows.length > 0">
         <tr v-for="row in crimeTableData.rows.slice().reverse()" :key="row.case_number" :style="getRowStyle(row.code)">
           <!-- Render table rows -->
-          <td>{{ row.case_number }}</td>
+          <td>{{ row.case_number }}<button id="delete-button" @click="deleteRow(row.case_number)">x</button></td>
           <td>{{ row.date }}</td>
           <td>{{ row.time }}</td>
           <td>{{ row.code }}</td>
@@ -405,7 +455,7 @@ th {
   background-color: #ccffcc; /* Muted green */
 }
 
-#show-modal {
+.modal {
   background-color: #4CAF50;
   border: none;
   color: white;
@@ -419,8 +469,31 @@ th {
   border-radius: 8px;
 }
 
-#show-modal:hover {
+.modal:hover {
   background-color: #2f7432;
+}
+
+#modal2{
+  background-color: #c30101
+}
+#modal2:hover{
+  background-color: #8f0000
+}
+
+#delete-button{
+  background-color: #c30101;
+  border: none;
+  color: white;
+  padding: 3px 5px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-left: 10px;
+  float: right
 }
 
 </style>
