@@ -115,7 +115,7 @@ async function fetchCrimeData() {
   const endDate = '2023-11-01';
   const codes = '';
   const limit = 1000;
-  const incidentsUrl = `http://localhost:8100/incidents?start_date=${startDate}&end_date=${endDate}&code=${codes}&limit=${limit}&min_lat=${bounds.getSouth()}&max_lat=${bounds.getNorth()}&min_lng=${bounds.getWest()}&max_lng=${bounds.getEast()}`;
+  const incidentsUrl = `http://localhost:8100/incidents?start_date=${startDate}&end_date=${endDate}&code=${codes}&limit=${limit}&min_lat=${bounds.getSouth()}&max_lat=${bounds.getNorth()}&min_lng=${bounds.getEast()}&max_lng=${bounds.getWest()}`;
 
   try {
     const incidentsResponse = await fetchJson(incidentsUrl);
@@ -130,6 +130,7 @@ async function fetchCrimeData() {
     console.error('Error fetching crime data:', error);
   }
 }
+
 async function fetchJson(url) {
   try {
     const response = await fetch(url);
@@ -287,6 +288,17 @@ async function deleteData(caseNumber) {
   }
 
 
+  import { watch } from 'vue';
+
+  watch(() => {
+    if (map.leaflet) {
+      return map.leaflet.getBounds();
+    }
+  }, (newBounds, oldBounds) => {
+    if (newBounds !== oldBounds) {
+      fetchCrimeData();
+    }
+  }, { deep: true });
 
 
 </script>
@@ -329,7 +341,6 @@ async function deleteData(caseNumber) {
       </div>
       <div id="leafletmap" class="cell auto"></div>
     </div>
-    <button id="show-modal" @click="showModal = true">Insert Crime</button>
 
     <!-- Legend-->
     <div class="legend">
@@ -359,14 +370,7 @@ async function deleteData(caseNumber) {
         </template>
       </modal>
     </Teleport>
-  <Teleport to="body">
-    <!-- use the modal component, pass in the prop -->
-    <modal :show="showModal" @close="showModal = false">
-      <template #header>
-        <h3>Insert Crime Form</h3>
-      </template>
-    </modal>
-  </Teleport>
+
 
   <!--delete crime button-->
   <button class="modal" id="modal2" @click="showModal2 = true">Delete Case</button>
