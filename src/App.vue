@@ -1,4 +1,5 @@
 <script setup>
+
 import { reactive, ref, onMounted } from 'vue'
 
 let crime_url = ref('');
@@ -102,6 +103,9 @@ function closeDialogGo() {
         dialog.close();
     }
 }
+function closeDialogInsert(){
+    
+}
 //function for when entering a location it updates to that location on the map
 function locationTest(loc){
     let url = 'https://nominatim.openstreetmap.org/search?q=' + loc + '&format=json&&limit=1';
@@ -155,6 +159,14 @@ function updateLocationInput(){
 
 }
 
+
+
+import Modal from './components/insertModal.vue'
+
+const showModal = ref(false)
+
+
+
 </script>
 
 <template>
@@ -175,7 +187,23 @@ function updateLocationInput(){
         </div>
         <div id="leafletmap" class="cell auto"></div>
     </div>
+    <div>
+</div>
+  
+  <button id="show-modal" @click="showModal = true" >Insert Crime</button>
+
+  <Teleport to="body">
+    <!-- use the modal component, pass in the prop -->
+    <modal :show="showModal" @close="showModal = false">
+      <template #header>
+        <h3>Insert Crime Form</h3>
+      </template>
+    </modal>
+  </Teleport>
+  
+
 </template>
+
 
 <style>
 #rest-dialog {
@@ -207,5 +235,22 @@ function updateLocationInput(){
     color: #D32323;
 }
 
+#show-modal {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+#show-modal:hover {
+  background-color: #2f7432;
+}
 
 </style>

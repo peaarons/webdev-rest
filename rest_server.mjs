@@ -3,6 +3,7 @@ import * as url from 'node:url';
 import { default as express } from 'express';
 import { default as sqlite3 } from 'sqlite3';
 import { transcode } from 'node:buffer';
+import cors from 'cors';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const db_filename = path.join(__dirname, 'db', 'stpaul_crime.sqlite3');
@@ -11,6 +12,8 @@ const port = 8100;
 
 let app = express();
 app.use(express.json());
+
+app.use(cors());
 
 /********************************************************************
  ***   DATABASE FUNCTIONS                                         *** 
@@ -172,6 +175,9 @@ app.put('/new-incident', (req, res) => {
         }
         date_time = date + ' ' + time
     }
+
+    //for updating the map boudarys
+    //map.leaflet.getBounds()._northWEST.lat
 
     //check to see if exists already
     const sqlCheck = `SELECT * FROM Incidents WHERE case_number = ?`;
