@@ -2,8 +2,7 @@ import * as path from 'node:path';
 import * as url from 'node:url';
 import { default as express } from 'express';
 import { default as sqlite3 } from 'sqlite3';
-import { transcode } from 'node:buffer';
-import cors from 'cors';
+import { default as cors } from 'cors';
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const db_filename = path.join(__dirname, 'db', 'stpaul_crime.sqlite3');
@@ -12,7 +11,6 @@ const port = 8100;
 
 let app = express();
 app.use(express.json());
-
 app.use(cors());
 
 /********************************************************************
@@ -146,6 +144,7 @@ app.get('/incidents', (req, res) => {
             sql += ` AND neighborhood_number IN (${neighborhoods.map(() => '?').join(',')})`;
             queryParams.push(...neighborhoods);
         }
+        
         //adding ORDER By and limit clause to the SQL query
         sql += ` ORDER BY date_time ASC LIMIT ?`;
         queryParams.push(limit);
@@ -153,6 +152,7 @@ app.get('/incidents', (req, res) => {
         dbSelect(sql, queryParams)
             .then((rows) => {
                 res.status(200).type('json').send(rows);
+                
             })
             .catch((error) => {
                 res.status(500).type('txt').send(error);

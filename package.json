@@ -23,7 +23,7 @@
         "express": "^4.18.2",
         "leaflet": "^1.9.4",
         "sqlite3": "^5.1.6",
-        "vue": "^3.3.4"
+        "vue": "^3.2.36"
     },
     "devDependencies": {
         "@vitejs/plugin-vue": "^4.4.0",
