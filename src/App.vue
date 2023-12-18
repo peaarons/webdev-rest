@@ -234,10 +234,19 @@ const getRowStyle = (code) => {
     return { backgroundColor: '#ccffcc' }; // Muted green
   }
 };
+
+import Modal from './components/insertModal.vue'
+
+const showModal = ref(false)
+
+
 </script>
 
 
+
 <template>
+
+
         <!--
      <dialog id="rest-dialog" open>
         <h1 class="dialog-header">St. Paul Crime REST API</h1>
@@ -273,6 +282,17 @@ const getRowStyle = (code) => {
     </div>
   </div>
 
+  <button id="show-modal" @click="showModal = true" >Insert Crime</button>
+
+<Teleport to="body">
+  <!-- use the modal component, pass in the prop -->
+  <modal :show="showModal" @close="showModal = false">
+    <template #header>
+      <h3>Insert Crime Form</h3>
+    </template>
+  </modal>
+</Teleport>
+
 <!-- Table -->
   <table>
     <thead>
@@ -301,6 +321,9 @@ const getRowStyle = (code) => {
       </template>
     </tbody>
   </table>
+
+  
+
 </template>
 
 
@@ -380,6 +403,24 @@ th {
 
 .other-crime {
   background-color: #ccffcc; /* Muted green */
+}
+
+#show-modal {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+#show-modal:hover {
+  background-color: #2f7432;
 }
 
 </style>
