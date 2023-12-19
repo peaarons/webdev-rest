@@ -1,8 +1,9 @@
 <script setup>
 import { reactive, ref, onMounted } from 'vue';
-import Modal from './components/insertModal.vue'
-
+import Modal from '@/components/insertModal.vue'
+import Modal2 from '@/components/deleteModal.vue'
 const showModal = ref(false)
+const showModal2=ref()
 
 let crime_url = ref('');
 let dialog_err = ref(false);
@@ -105,10 +106,36 @@ onMounted(() => {
     updateLocationInput();
   });
   fetchCrimeData();
+  drawNeighborhoodMarkers(map.neighborhood_markers, crimeTableData.rows);
 });
 
 
 // FUNCTIONS
+function drawNeighborhoodMarkers(neighborhoods, crimes) {
+  neighborhoods.forEach((marker) => {
+    let marker_name = getNeighborhoodNameById(marker.marker);
+    let marker_crimes = calculateCrimes(marker_name, crimes, neighborhoods);
+
+    // Create a marker with a popup
+    L.marker(marker.location)
+      .addTo(map.leaflet)
+      .bindPopup(`${marker_name}: ${marker_crimes} crimes`)
+      .on('click', () => {
+        // Handle marker click if needed
+      });
+  });
+}
+
+function calculateCrimes(name, crimes, neighborhoods) {
+  let crime_count = 0;
+  crimes.forEach((crime) => {
+    if (getNeighborhoodNameById(crime.neighborhood_number, neighborhoods) === name) {
+      crime_count++;
+    }
+  });
+  return crime_count;
+}
+
 async function fetchCrimeData() {
   const bounds = map.leaflet.getBounds();
   const startDate = '2023-10-24';
@@ -122,7 +149,6 @@ async function fetchCrimeData() {
     console.log('Fetched crime data:', incidentsResponse);
     // Directly update crimeTableData.rows
     crimeTableData.rows = incidentsResponse;
-
 
     // Log the rows after setting them
     console.log('Crime table rows after setting:', crimeTableData.rows);
@@ -198,7 +224,6 @@ function locationTest(loc) {
       } else {
         console.log("Not found");
       }
-
     })
     .catch((error) => {
       console.log('Error:', error);
@@ -207,7 +232,6 @@ function locationTest(loc) {
 
 //function for updating the location in the input box when you pan around the map. 
 function updateLocationInput() {
-
   const center = map.leaflet.getCenter();
   const lat = center.lat.toFixed(6);
   const lng = center.lng.toFixed(6);
@@ -223,11 +247,7 @@ function updateLocationInput() {
     .catch((error) => {
       console.log('Error:', error);
     });
-
 }
-
-
-
 
 
 
@@ -250,10 +270,7 @@ const getRowStyle = (code) => {
 };
 
 
-import Modal2 from './components/deleteModal.vue'
-
-const showModal2 = ref(false)
-
+//these methods are for deleting a entry in the database. 
 function deleteRow(caseNumber) {
   if (confirm(`Are you sure you want to delete case number ${caseNumber}?`)) {
     deleteData(caseNumber);
@@ -361,8 +378,8 @@ async function deleteData(caseNumber) {
       </div>
     </div>
 
-  <!--insert crime button-->
-  <button class="modal" @click="showModal = true" >Insert Case</button>
+    <!--insert crime button-->
+    <button class="modal" @click="showModal = true">Insert Case</button>
 
 
     <Teleport to="body">
@@ -375,17 +392,17 @@ async function deleteData(caseNumber) {
     </Teleport>
 
 
-  <!--delete crime button-->
-  <button class="modal" id="modal2" @click="showModal2 = true">Delete Case</button>
+    <!--delete crime button-->
+    <button class="modal" id="modal2" @click="showModal2 = true">Delete Case</button>
 
-  <Teleport to="body">
-    <!-- use the modal component, pass in the prop -->
-    <modal2 :show2="showModal2" @close="showModal2 = false" @delete-success="handleDeleteSuccess">
-      <template #header>
-        <h3>Insert Crime Form</h3>
-      </template>
-    </modal2>
-  </Teleport>
+    <Teleport to="body">
+      <!-- use the modal component, pass in the prop -->
+      <modal2 :show2="showModal2" @close="showModal2 = false" @delete-success="handleDeleteSuccess">
+        <template #header>
+          <h3>Insert Crime Form</h3>
+        </template>
+      </modal2>
+    </Teleport>
 
     <!-- Table -->
     <table>
@@ -397,7 +414,7 @@ async function deleteData(caseNumber) {
       </thead>
       <tbody>
         <template v-if="crimeTableData.rows.length > 0">
-          <tr v-for="row in crimeTableData.rows.slice().reverse()" :key="row.case_number" :style="getRowStyle(row.code)">
+          <tr v-for="row in crimeTableData.rows" :key="row.case_number" :style="getRowStyle(row.code)">
             <!-- Render table rows -->
             <td>{{ row.case_number }}<button id="delete-button" @click="deleteRow(row.case_number)">x</button></td>
             <td>{{ row.date }}</td>
@@ -650,14 +667,15 @@ th {
   background-color: #2f7432;
 }
 
-#modal2{
+#modal2 {
   background-color: #c30101
 }
-#modal2:hover{
+
+#modal2:hover {
   background-color: #8f0000
 }
 
-#delete-button{
+#delete-button {
   background-color: #c30101;
   border: none;
   color: white;
@@ -670,17 +688,17 @@ th {
   cursor: pointer;
   border-radius: 5px;
   margin-left: 10px;
-  float: right
 }
 
-#modal2{
+#modal2 {
   background-color: #c30101
 }
-#modal2:hover{
+
+#modal2:hover {
   background-color: #8f0000
 }
 
-#delete-button{
+#delete-button {
   background-color: #c30101;
   border: none;
   color: white;
@@ -693,7 +711,6 @@ th {
   cursor: pointer;
   border-radius: 5px;
   margin-left: 10px;
-  float: right
 }
 
 .colorful-banner {
