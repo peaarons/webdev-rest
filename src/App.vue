@@ -108,6 +108,7 @@ onMounted(() => {
         await fetchCrimeData();
         updateVisibleCrimes();
         drawNeighborhoodMarkers(map.neighborhood_markers, crimeTableData.rows);
+        drawCrimeMarkers();
     });
 });
 
@@ -127,6 +128,53 @@ async function drawNeighborhoodMarkers(neighborhoods, crimes) {
             });
     });
 }
+
+
+
+
+/*
+
+//marker for each crime
+async function geocodeAddress(address) {
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (data.length > 0) {
+            return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+        } else {
+            throw new Error('No results found');
+        }
+    } catch (error) {
+        console.error('Geocoding error:', error);
+        return null; // Or handle the error as per your application's needs
+    }
+}
+
+async function drawCrimeMarkers() {
+    for (let crime of crimeTableData.rows) {
+        geocodeAddress(crime.block) // Replace 'address' with the actual key for the address in your data
+            .then(location => {
+                if (location) {
+                    L.marker([location.lat, location.lng]).addTo(map.leaflet).bindPopup(`Crime: ${crime.incident}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error in geocoding:', error);
+                // Handle any geocoding errors here
+            });
+    }
+}
+
+// Call this function after fetching and updating your crime data
+await drawCrimeMarkers();
+
+
+*/
+
+
 
  function calculateCrimes(name, crimes, neighborhoods) {
     let crime_count = 0
