@@ -569,9 +569,12 @@ async function deleteData(caseNumber) {
 
 
       <!-- Filter UI for incident types -->
+    <h5 style = "font-size: 1rem">Incident Types</h5>
+    <div class="checkbox-container">
     <div v-for="(value, key) in filters.incidentTypes" :key="key">
       <input type="checkbox" v-model="filters.incidentTypes[key]" :id="key">
       <label :for="key">{{ key }}</label>
+    </div>
     </div>
 
     <!-- Filter UI for neighborhoods -->
