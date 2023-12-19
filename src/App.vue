@@ -9,6 +9,7 @@ let crime_url = ref('');
 let dialog_err = ref(false);
 
 let location = ref('');
+let neighborhoodMarkers = [];
 
 const view = ref('map'); // Initialize view with 'map'
 
@@ -73,9 +74,8 @@ let crimeTableData = reactive({
 
 
 
-// Vue callback for once <template> HTML has been added to web page
-onMounted(() => {
-  // Create Leaflet map (set bounds and valied zoom levels)
+onMounted(async () => {
+  // Create Leaflet map (set bounds and valid zoom levels)
   map.leaflet = L.map('leafletmap').setView([map.center.lat, map.center.lng], map.zoom);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -84,48 +84,63 @@ onMounted(() => {
   }).addTo(map.leaflet);
   map.leaflet.setMaxBounds([[44.883658, -93.217977], [45.008206, -92.993787]]);
   map.leaflet.on('moveend', updateLocationInput);
-  map.leaflet.on('moveend',updateVisibleCrimes )
+ 
 
   // Get boundaries for St. Paul neighborhoods
   let district_boundary = new L.geoJson();
 
-  fetch('data/StPaulDistrictCouncil.geojson')
-    .then((response) => {
-      return response.json();
-    })
-    .then((result) => {
-      result.features.forEach((value) => {
-        district_boundary.addData(value);
-        //update the value of the location box to the current address
-        district_boundary.addTo(map.leaflet);
-      });
-    })
-    .catch((error) => {
-      console.log('Error:', error);
+  try {
+    const response = await fetch('data/StPaulDistrictCouncil.geojson');
+    const result = await response.json();
+
+    result.features.forEach((value) => {
+      district_boundary.addData(value);
+      // Update the value of the location box to the current address
+      district_boundary.addTo(map.leaflet);
     });
-    map.leaflet.on('moveend', async () => {
-        updateLocationInput();
-        await fetchCrimeData();
-        updateVisibleCrimes();
-        drawNeighborhoodMarkers(map.neighborhood_markers, crimeTableData.rows);
-    });
+
+ 
+    drawNeighborhoodMarkers(map.neighborhood_markers, crimeTableData.rows);
+   
+    map.leaflet.on('moveend', moveMap);
+    map.leaflet.on('moveend', showCrimeOnMap);
+    await fetchCrimeData();
+
+   
+  } catch (error) {
+    console.log('Error:', error);
+  }
 });
 
+function moveMap() {
+  map.bounds.nw = map.leaflet.getBounds().getNorthWest();
+  map.bounds.se = map.leaflet.getBounds().getSouthEast();
+  map.center = map.leaflet.getCenter();
+  if(map.center>=17){
+    fetchCrimeData
+  }
+}
 
-// FUNCTIONS
+
 async function drawNeighborhoodMarkers(neighborhoods, crimes) {
-    neighborhoods.forEach((marker) => {
-        let marker_name = getNeighborhoodNameById(marker.marker);
-        let marker_crimes = calculateCrimes(marker_name, crimes, neighborhoods);
+  // Clear existing markers
+  neighborhoodMarkers.forEach(marker => marker.remove());
+  neighborhoodMarkers = [];
 
-        // Create a marker with a popup
-        L.marker(marker.location)
-            .addTo(map.leaflet)
-            .bindPopup(`${marker_name}: ${marker_crimes} crimes`)
-            .on('click', () => {
-                // Handle marker click if needed
-            });
-    });
+  neighborhoods.forEach((marker) => {
+    let marker_name = getNeighborhoodNameById(marker.marker);
+    let marker_crimes = calculateCrimes(marker_name, crimes, neighborhoods);
+
+    // Create a marker with a popup
+    const newMarker = L.marker(marker.location)
+      .addTo(map.leaflet)
+      .bindPopup(`${marker_name}: ${marker_crimes} crimes`)
+      .on('click', () => {
+        // Handle marker click if needed
+      });
+
+    neighborhoodMarkers.push(newMarker);
+  });
 }
 
  function calculateCrimes(name, crimes, neighborhoods) {
@@ -154,24 +169,20 @@ async function fetchCrimeData() {
 }
 
 //update the table to show only the visaible neighbhoods. 
-async function updateVisibleCrimes() {
+async function showCrimeOnMap() {
+  if (map.leaflet) { // Check if the map instance exists
     const bounds = map.leaflet.getBounds();
-    const visible = crimeTableData.rows.filter(crime => {
-        const neighborhoodId = crime.neighborhood_number;
-        // Find the corresponding marker for the neighborhood
-        const neighborhoodMarker = map.neighborhood_markers.find(marker => marker.marker === neighborhoodId);
-        // Check if the marker is within the map bounds
-        if (neighborhoodMarker) {
-            const markerLatLng = L.latLng(neighborhoodMarker.location);
-            return bounds.contains(markerLatLng);
-        }
-        return false;
-    });
-    crimeTableData.rows = visible;
-    if (visible.length > 0) {
-        test.value = true;
-    }
-    console.log("visibleCrimes count: ", visible.length);
+    
+    const visibleMarkerIds = map.neighborhood_markers
+      .filter(marker => {
+        const markerLatLng = L.latLng(marker.location);
+        return bounds.contains(markerLatLng);
+      })
+      .map(marker => marker.marker);
+
+    // Update crimeTableData.rows with crimes in visible neighborhoods
+    crimeTableData.rows = crimeTableData.rows.filter(crime => visibleMarkerIds.includes(crime.neighborhood_number));
+  }
 }
 
 async function fetchJson(url) {
