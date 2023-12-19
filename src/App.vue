@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, ref, onMounted } from 'vue';
+import { reactive, ref, onMounted, watch } from 'vue';
 import Modal from '@/components/insertModal.vue'
 import Modal2 from '@/components/deleteModal.vue'
 const showModal = ref(false)
@@ -71,6 +71,13 @@ let crimeTableData = reactive({
 
 });
 
+const filters = reactive({
+    incidentTypes: {}, // Object with keys as incident types and values as booleans
+    neighborhoods: {}, // Same structure for neighborhoods
+    startDate: null, // Date or string
+    endDate: null, // Date or string
+    maxIncidents: 1000, // Default max incidents
+});
 
 
 // Vue callback for once <template> HTML has been added to web page
@@ -108,7 +115,7 @@ onMounted(() => {
         await fetchCrimeData();
         updateVisibleCrimes();
         drawNeighborhoodMarkers(map.neighborhood_markers, crimeTableData.rows);
-        drawCrimeMarkers();
+        //drawCrimeMarkers();
     });
 });
 
@@ -209,6 +216,8 @@ async function fetchCrimeData() {
   }
 }
 
+
+
 //update the table to show only the visaible neighbhoods. 
 async function updateVisibleCrimes() {
     const bounds = map.leaflet.getBounds();
@@ -229,6 +238,43 @@ async function updateVisibleCrimes() {
     }
     console.log("visibleCrimes count: ", visible.length);
 }
+
+
+async function fetchAndFilterCrimeData() {
+  console.log('filter the data')
+    let filteredData = [];
+    try {
+        // Attempt to fetch data and wait for the promise to resolve
+        filteredData = await fetchCrimeData(); // Make sure this function returns an array
+    } catch (error) {
+        console.error('Error fetching crime data:', error);
+        // Handle error or set filteredData to a default value
+    }
+
+    // Ensure filteredData is not undefined before calling filter on it
+    if (filteredData && filteredData.length > 0) {
+      console.log('if and if')
+        const bounds = map.leaflet.getBounds(); // Ensure bounds is defined
+        const visible = filteredData.filter(crime => {
+            const neighborhoodId = crime.neighborhood_number;
+            const neighborhoodMarker = map.neighborhood_markers.find(marker => marker.marker === neighborhoodId);
+            if (neighborhoodMarker) {
+                const markerLatLng = L.latLng(neighborhoodMarker.location);
+                return bounds.contains(markerLatLng);
+            }
+            return false;
+        });
+        crimeTableData.rows = visible;
+    } else {
+        // Handle the case where filteredData is empty or undefined
+        crimeTableData.rows = [];
+    }
+}
+
+
+// Watch for filter changes and fetch data
+watch(filters, fetchAndFilterCrimeData, { deep: true });
+
 
 async function fetchJson(url) {
   try {
@@ -402,6 +448,29 @@ async function deleteData(caseNumber) {
 
 
 <template>
+  <!-- Filter UI for incident types -->
+  <div v-for="(value, key) in filters.incidentTypes" :key="key">
+    <input type="checkbox" v-model="filters.incidentTypes[key]" :id="key">
+    <label :for="key">{{ key }}</label>
+  </div>
+
+  <!-- Filter UI for neighborhoods -->
+  <div v-for="(value, key) in filters.neighborhoods" :key="key">
+    <input type="checkbox" v-model="filters.neighborhoods[key]" :id="key">
+    <label :for="key">{{ key }}</label>
+  </div>
+
+  <!-- Date range picker -->
+  <input type="date" v-model="filters.startDate">
+  <input type="date" v-model="filters.endDate">
+
+  <!-- Max incidents input -->
+  <input type="number" v-model="filters.maxIncidents">
+
+  <!-- Optional: Update button -->
+  <button @click="fetchAndFilterCrimeData">Update</button>
+
+
   <!--
      <dialog id="rest-dialog" open>
         <h1 class="dialog-header">St. Paul Crime REST API</h1>
@@ -545,11 +614,13 @@ async function deleteData(caseNumber) {
         </div>
         <div class="cell small-12 medium-12 large-6">
           <h5>
-            Im a Senior.
+            Hello! I am a Senior at the University of Saint Thomas where I'm double majoring in Computer Science and Data Science. 
+            I am interested in artificial intelligence and look forward to pursuing a career in this field.
+            In my free time I love to rock climb, listen to music, and watch anime. 
           </h5>
         </div>
         <div class="cell small-12 medium-12 large-2"></div>
-        <!-- add image -->
+        <div class="cell medium-auto" style="float: right;"><img src="/public/images/homePic_resized.png" alt="Me" style ='max-height: 15rem' /></div>
         <div class="cell small-12 medium-12 large-4">
 
         </div>
