@@ -159,7 +159,7 @@ async function fetchCrimeData() {
   const bounds = map.leaflet.getBounds();
   const startDate = '2023-10-24';
   const endDate = '2023-11-01';
-  const codes = '600 700';
+  const codes = '600';
   const limit = 1000;
   const minlat = bounds.getSouth()
   const maxlat = bounds.getNorth()
@@ -167,7 +167,7 @@ async function fetchCrimeData() {
   const maxlng = bounds.getWest()
   const neighborhoods = getNeighborhoodsByLatLng(minlat,maxlat,minlng,maxlng)
   console.log(neighborhoods)
-  const incidentsUrl = `http://localhost:8100/incidents?start_date=${startDate}&end_date=${endDate}&code=${codes}&limit=${limit}&min_lat=${minlat}&max_lat=${maxlat}&min_lng=${minlng}&max_lng=${maxlng}&neighborhood=${neighborhoods}`;
+  const incidentsUrl = `http://localhost:8100/incidents?start_date=${startDate}&end_date=${endDate}&code=${codes}&limit=${limit}&min_lat=${minlat}&max_lat=${maxlat}&min_lng=${minlng}&max_lng=${maxlng}`;
   console.log( 'south bound' + bounds.getSouth())
   console.log( 'east bound' + bounds.getEast())
   try {

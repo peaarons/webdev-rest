@@ -154,11 +154,11 @@ app.get('/incidents', (req, res) => {
         console.log(neighborhoods + 'query')
         addCondition(`neighborhood_number IN (${neighborhoods.map(_ => '?').join(', ')})`, ...neighborhoods.map(parseInt));
     }
-
     if (req.query.code) {
         let codes = req.query.code.split(',');
-        
-        addCondition(`code IN (${codes.map(_=> '?').join(', ')})`, ...codes.map(parseInt));
+        console.log(`code IN (${codes.map(_ => '?').join(', ')})`)
+        console.log(...codes.map(code => parseInt(code)).join(', '))
+        addCondition(`code IN (${codes.map(_=> '?').join(', ')})`, ...codes.map(code => parseInt(code)).join(', '));
     }
 
     if (req.query.grid) {
