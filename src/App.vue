@@ -110,15 +110,15 @@ onMounted(() => {
 
 // FUNCTIONS
 async function fetchCrimeData() {
-  let bounds = map.leaflet.getBounds();
+  const bounds = map.leaflet.getBounds();
   const startDate = '2023-10-24';
   const endDate = '2023-11-01';
   const codes = '';
   const limit = 1000;
-  let incidentsUrl = `http://localhost:8100/incidents?start_date=${startDate}&end_date=${endDate}&code=${codes}&limit=${limit}&min_lat=${bounds.getSouth()}&max_lat=${bounds.getNorth()}&min_lng=${bounds.getEast()}&max_lng=${bounds.getWest()}`;
+  const incidentsUrl = `http://localhost:8100/incidents?start_date=${startDate}&end_date=${endDate}&code=${codes}&limit=${limit}&min_lat=${bounds.getSouth()}&max_lat=${bounds.getNorth()}&min_lng=${bounds.getEast()}&max_lng=${bounds.getWest()}`;
   console.log( 'south bound' + bounds.getSouth())
   try {
-    let incidentsResponse = await fetchJson(incidentsUrl);
+    const incidentsResponse = await fetchJson(incidentsUrl);
     console.log('Fetched crime data:', incidentsResponse);
     // Directly update crimeTableData.rows
     crimeTableData.rows = incidentsResponse;
