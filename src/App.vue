@@ -143,6 +143,61 @@ async function drawNeighborhoodMarkers(neighborhoods, crimes) {
   });
 }
 
+
+
+
+/*
+
+//marker for each crime
+async function geocodeAddress(passedInAddress) {
+    try {
+        address = convertAddress(passedInAddress)
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (data.length > 0) {
+            return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+        } else {
+            throw new Error('No results found');
+        }
+    } catch (error) {
+        console.error('Geocoding error:', error);
+        return null; // Or handle the error as per your application's needs
+    }
+}
+
+async function drawCrimeMarkers() {
+    for (let crime of crimeTableData.rows) {
+        geocodeAddress(crime.block) // Replace 'address' with the actual key for the address in your data
+            .then(location => {
+                if (location) {
+                    L.marker([location.lat, location.lng]).addTo(map.leaflet).bindPopup(`Crime: ${crime.incident}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error in geocoding:', error);
+                // Handle any geocoding errors here
+            });
+    }
+}
+
+// Call this function after fetching and updating your crime data
+await drawCrimeMarkers();
+
+
+function convertAddress(address) {
+    //finds 'X' chars that are surrounded by digits or word boundaries
+    const regex = /(?<=\b|\d)X(?=\d|\b)/g;
+
+    return address.replace(regex, '0');
+}
+
+
+*/
+
+
  function calculateCrimes(name, crimes, neighborhoods) {
     let crime_count = 0
     crimes.forEach((crime) => {
@@ -187,7 +242,7 @@ async function showCrimeOnMap() {
 
 async function fetchJson(url) {
   try {
-    const response = await fetch(url);
+    let response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
@@ -256,6 +311,8 @@ function locationTest(loc) {
     .catch((error) => {
       console.log('Error:', error);
     });
+    fetchCrimeData()
+    console.log('enter location function')
 }
 
 //function for updating the location in the input box when you pan around the map. 
@@ -275,6 +332,7 @@ function updateLocationInput() {
     .catch((error) => {
       console.log('Error:', error);
     });
+    fetchCrimeData()
 }
 
 
@@ -326,10 +384,27 @@ async function deleteData(caseNumber) {
   }
 }
 
-async function handleDeleteSuccess(deletedCaseNumber) {
-  console.log('wopo gangnam style')
-  crimeTableData.rows = crimeTableData.rows.filter(row => row.case_number !== deletedCaseNumber);
-}
+
+  async function handleDeleteSuccess(deletedCaseNumber) {
+    console.log('wopo gangnam style')
+    crimeTableData.rows = crimeTableData.rows.filter(row => row.case_number !== deletedCaseNumber);
+  }
+
+
+  /*import { watch } from 'vue';
+
+  watch(() => {
+    console.log('watch')
+    if (map.leaflet) {
+      return map.leaflet.getBounds();
+    }
+  }, (newBounds, oldBounds) => {
+    console.log('new bounds, old bounds')
+    if (newBounds !== oldBounds) {
+      console.log('watch fetch crime data')
+      fetchCrimeData();
+    }
+  }, { deep: true }); */
 
 
 </script>
