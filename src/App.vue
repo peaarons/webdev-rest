@@ -110,15 +110,15 @@ onMounted(() => {
 
 // FUNCTIONS
 async function fetchCrimeData() {
-  const bounds = map.leaflet.getBounds();
+  let bounds = map.leaflet.getBounds();
   const startDate = '2023-10-24';
   const endDate = '2023-11-01';
   const codes = '';
   const limit = 1000;
-  const incidentsUrl = `http://localhost:8100/incidents?start_date=${startDate}&end_date=${endDate}&code=${codes}&limit=${limit}&min_lat=${bounds.getSouth()}&max_lat=${bounds.getNorth()}&min_lng=${bounds.getEast()}&max_lng=${bounds.getWest()}`;
-
+  let incidentsUrl = `http://localhost:8100/incidents?start_date=${startDate}&end_date=${endDate}&code=${codes}&limit=${limit}&min_lat=${bounds.getSouth()}&max_lat=${bounds.getNorth()}&min_lng=${bounds.getEast()}&max_lng=${bounds.getWest()}`;
+  console.log( 'south bound' + bounds.getSouth())
   try {
-    const incidentsResponse = await fetchJson(incidentsUrl);
+    let incidentsResponse = await fetchJson(incidentsUrl);
     console.log('Fetched crime data:', incidentsResponse);
     // Directly update crimeTableData.rows
     crimeTableData.rows = incidentsResponse;
@@ -133,7 +133,7 @@ async function fetchCrimeData() {
 
 async function fetchJson(url) {
   try {
-    const response = await fetch(url);
+    let response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
@@ -291,11 +291,14 @@ async function deleteData(caseNumber) {
   import { watch } from 'vue';
 
   watch(() => {
+    console.log('watch')
     if (map.leaflet) {
       return map.leaflet.getBounds();
     }
   }, (newBounds, oldBounds) => {
+    console.log('new bounds, old bounds')
     if (newBounds !== oldBounds) {
+      console.log('watch fetch crime data')
       fetchCrimeData();
     }
   }, { deep: true });
