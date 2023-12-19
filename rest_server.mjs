@@ -151,14 +151,12 @@ app.get('/incidents', (req, res) => {
 
     if (req.query.neighborhood) {
         let neighborhoods = req.query.neighborhood.split(',');
-        console.log(neighborhoods + 'query')
         addCondition(`neighborhood_number IN (${neighborhoods.map(_ => '?').join(', ')})`, ...neighborhoods.map(parseInt));
     }
+
     if (req.query.code) {
         let codes = req.query.code.split(',');
-        console.log(`code IN (${codes.map(_ => '?').join(', ')})`)
-        console.log(...codes.map(code => parseInt(code)).join(', '))
-        addCondition(`code IN (${codes.map(_=> '?').join(', ')})`, ...codes.map(code => parseInt(code)).join(', '));
+        addCondition(`code IN (${codes.map(_ => '?').join(', ')})`, ...codes.map(parseInt));
     }
 
     if (req.query.grid) {
@@ -170,14 +168,13 @@ app.get('/incidents', (req, res) => {
         limit = parseInt(req.query.limit);
     }
 
-
     params.push(limit);
     sql += ' ORDER BY date_time DESC LIMIT ?';
 
 
     dbSelect(sql, params)
         .then(rows => {
-            console.log('dbselect')
+
             res.status(200).type('json').send(rows);
         }).catch((error) => {
             res.status(500).type('txt').send(error);

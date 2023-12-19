@@ -84,6 +84,7 @@ onMounted(() => {
   }).addTo(map.leaflet);
   map.leaflet.setMaxBounds([[44.883658, -93.217977], [45.008206, -92.993787]]);
   map.leaflet.on('moveend', updateLocationInput);
+  map.leaflet.on('moveend',updateVisibleCrimes )
 
   // Get boundaries for St. Paul neighborhoods
   let district_boundary = new L.geoJson();
@@ -102,9 +103,12 @@ onMounted(() => {
     .catch((error) => {
       console.log('Error:', error);
     });
-  map.leaflet.on('moveend', () => {
-    updateLocationInput();
-  });
+  map.leaflet.on('moveend', async () => {
+        updateLocationInput();
+        await fetchCrimeData();
+        updateVisibleCrimes();
+    });
+
   fetchCrimeData();
   drawNeighborhoodMarkers(map.neighborhood_markers, crimeTableData.rows);
 });
@@ -127,52 +131,20 @@ function drawNeighborhoodMarkers(neighborhoods, crimes) {
 }
 
 function calculateCrimes(name, crimes, neighborhoods) {
-  let crime_count = 0;
-  crimes.forEach((crime) => {
-    if (getNeighborhoodNameById(crime.neighborhood_number, neighborhoods) === name) {
-      crime_count++;
-    }
-  });
-  return crime_count;
+    let crime_count = 0
+    crimes.forEach((crime) => {
+        if (getNeighborhoodNameById(crime.neighborhood_number, neighborhoods) === name) {
+            crime_count++;
+        }
+    })
+    return crime_count; 
 }
 
-function getNeighborhoodsByLatLng(minlat,maxlat,minlng,maxlng){
-  let output = ''
-  map.neighborhood_markers.forEach(marker => {
-  let lat = marker.location[0]; //neighborhood latitude
-  let lng = marker.location[1]; //neighborhood longitude
-  console.log('if(' + minlat  + '<=' + lat + '&&' + lat + '<=' + maxlat +'&&' +  minlng + '<=' + lng + '&&' + lng + '<=' + maxlng + ')')
-  if (minlat <= lat && lat <= maxlat && minlng >= lng && lng >= maxlng){
-    console.log('output update')
-
-    output = output + marker.marker + ' '
-  }
-
-  console.log(`Marker for ${marker.name} num ${marker.marker}: Latitude = ${lat}, Longitude = ${lng}`);
-  
-  });
-  let out = output.slice(0, -1);
-  return out
-  }
-
 async function fetchCrimeData() {
-  const bounds = map.leaflet.getBounds();
-  const startDate = '2023-10-24';
-  const endDate = '2023-11-01';
-  const codes = '600';
-  const limit = 1000;
-  const minlat = bounds.getSouth()
-  const maxlat = bounds.getNorth()
-  const minlng = bounds.getEast()
-  const maxlng = bounds.getWest()
-  const neighborhoods = getNeighborhoodsByLatLng(minlat,maxlat,minlng,maxlng)
-  console.log(neighborhoods)
-  const incidentsUrl = `http://localhost:8100/incidents?start_date=${startDate}&end_date=${endDate}&code=${codes}&limit=${limit}&min_lat=${minlat}&max_lat=${maxlat}&min_lng=${minlng}&max_lng=${maxlng}`;
-  console.log( 'south bound' + bounds.getSouth())
-  console.log( 'east bound' + bounds.getEast())
+    const incidentsUrl = `http://localhost:8100/incidents`;
+    // Get the current bounds of the map
   try {
     const incidentsResponse = await fetchJson(incidentsUrl);
-    console.log('Fetched crime data:', incidentsResponse);
     // Directly update crimeTableData.rows
     crimeTableData.rows = incidentsResponse;
 
@@ -181,6 +153,27 @@ async function fetchCrimeData() {
   } catch (error) {
     console.error('Error fetching crime data:', error);
   }
+}
+
+//update the table to show only the visaible neighbhoods. 
+async function updateVisibleCrimes() {
+    const bounds = map.leaflet.getBounds();
+    const visible = crimeTableData.rows.filter(crime => {
+        const neighborhoodId = crime.neighborhood_number;
+        // Find the corresponding marker for the neighborhood
+        const neighborhoodMarker = map.neighborhood_markers.find(marker => marker.marker === neighborhoodId);
+        // Check if the marker is within the map bounds
+        if (neighborhoodMarker) {
+            const markerLatLng = L.latLng(neighborhoodMarker.location);
+            return bounds.contains(markerLatLng);
+        }
+        return false;
+    });
+    crimeTableData.rows = visible;
+    if (visible.length > 0) {
+        test.value = true;
+    }
+    console.log("visibleCrimes count: ", visible.length);
 }
 
 async function fetchJson(url) {
