@@ -135,8 +135,9 @@ async function drawNeighborhoodMarkers(neighborhoods, crimes) {
 /*
 
 //marker for each crime
-async function geocodeAddress(address) {
+async function geocodeAddress(passedInAddress) {
     try {
+        address = convertAddress(passedInAddress)
         const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -172,8 +173,15 @@ async function drawCrimeMarkers() {
 await drawCrimeMarkers();
 
 
-*/
+function convertAddress(address) {
+    //finds 'X' chars that are surrounded by digits or word boundaries
+    const regex = /(?<=\b|\d)X(?=\d|\b)/g;
 
+    return address.replace(regex, '0');
+}
+
+
+*/
 
 
  function calculateCrimes(name, crimes, neighborhoods) {
