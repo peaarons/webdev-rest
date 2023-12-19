@@ -103,34 +103,32 @@ onMounted(() => {
     .catch((error) => {
       console.log('Error:', error);
     });
-  map.leaflet.on('moveend', async () => {
+    map.leaflet.on('moveend', async () => {
         updateLocationInput();
         await fetchCrimeData();
         updateVisibleCrimes();
+        drawNeighborhoodMarkers(map.neighborhood_markers, crimeTableData.rows);
     });
-
-  fetchCrimeData();
-  drawNeighborhoodMarkers(map.neighborhood_markers, crimeTableData.rows);
 });
 
 
 // FUNCTIONS
-function drawNeighborhoodMarkers(neighborhoods, crimes) {
-  neighborhoods.forEach((marker) => {
-    let marker_name = getNeighborhoodNameById(marker.marker);
-    let marker_crimes = calculateCrimes(marker_name, crimes, neighborhoods);
+async function drawNeighborhoodMarkers(neighborhoods, crimes) {
+    neighborhoods.forEach((marker) => {
+        let marker_name = getNeighborhoodNameById(marker.marker);
+        let marker_crimes = calculateCrimes(marker_name, crimes, neighborhoods);
 
-    // Create a marker with a popup
-    L.marker(marker.location)
-      .addTo(map.leaflet)
-      .bindPopup(`${marker_name}: ${marker_crimes} crimes`)
-      .on('click', () => {
-        // Handle marker click if needed
-      });
-  });
+        // Create a marker with a popup
+        L.marker(marker.location)
+            .addTo(map.leaflet)
+            .bindPopup(`${marker_name}: ${marker_crimes} crimes`)
+            .on('click', () => {
+                // Handle marker click if needed
+            });
+    });
 }
 
-function calculateCrimes(name, crimes, neighborhoods) {
+ function calculateCrimes(name, crimes, neighborhoods) {
     let crime_count = 0
     crimes.forEach((crime) => {
         if (getNeighborhoodNameById(crime.neighborhood_number, neighborhoods) === name) {
