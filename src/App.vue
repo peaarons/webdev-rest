@@ -136,14 +136,40 @@ function calculateCrimes(name, crimes, neighborhoods) {
   return crime_count;
 }
 
+function getNeighborhoodsByLatLng(minlat,maxlat,minlng,maxlng){
+  let output = ''
+  map.neighborhood_markers.forEach(marker => {
+  let lat = marker.location[0]; //neighborhood latitude
+  let lng = marker.location[1]; //neighborhood longitude
+  console.log('if(' + minlat  + '<=' + lat + '&&' + lat + '<=' + maxlat +'&&' +  minlng + '<=' + lng + '&&' + lng + '<=' + maxlng + ')')
+  if (minlat <= lat && lat <= maxlat && minlng >= lng && lng >= maxlng){
+    console.log('output update')
+
+    output = output + marker.marker + ' '
+  }
+
+  console.log(`Marker for ${marker.name} num ${marker.marker}: Latitude = ${lat}, Longitude = ${lng}`);
+  
+  });
+  let out = output.slice(0, -1);
+  return out
+  }
+
 async function fetchCrimeData() {
   const bounds = map.leaflet.getBounds();
   const startDate = '2023-10-24';
   const endDate = '2023-11-01';
-  const codes = '';
+  const codes = '600 700';
   const limit = 1000;
-  const incidentsUrl = `http://localhost:8100/incidents?start_date=${startDate}&end_date=${endDate}&code=${codes}&limit=${limit}&min_lat=${bounds.getSouth()}&max_lat=${bounds.getNorth()}&min_lng=${bounds.getEast()}&max_lng=${bounds.getWest()}`;
+  const minlat = bounds.getSouth()
+  const maxlat = bounds.getNorth()
+  const minlng = bounds.getEast()
+  const maxlng = bounds.getWest()
+  const neighborhoods = getNeighborhoodsByLatLng(minlat,maxlat,minlng,maxlng)
+  console.log(neighborhoods)
+  const incidentsUrl = `http://localhost:8100/incidents?start_date=${startDate}&end_date=${endDate}&code=${codes}&limit=${limit}&min_lat=${minlat}&max_lat=${maxlat}&min_lng=${minlng}&max_lng=${maxlng}&neighborhood=${neighborhoods}`;
   console.log( 'south bound' + bounds.getSouth())
+  console.log( 'east bound' + bounds.getEast())
   try {
     const incidentsResponse = await fetchJson(incidentsUrl);
     console.log('Fetched crime data:', incidentsResponse);
@@ -228,6 +254,8 @@ function locationTest(loc) {
     .catch((error) => {
       console.log('Error:', error);
     });
+    fetchCrimeData()
+    console.log('enter location function')
 }
 
 //function for updating the location in the input box when you pan around the map. 
@@ -247,6 +275,7 @@ function updateLocationInput() {
     .catch((error) => {
       console.log('Error:', error);
     });
+    fetchCrimeData()
 }
 
 
@@ -305,7 +334,7 @@ async function deleteData(caseNumber) {
   }
 
 
-  import { watch } from 'vue';
+  /*import { watch } from 'vue';
 
   watch(() => {
     console.log('watch')
@@ -318,7 +347,7 @@ async function deleteData(caseNumber) {
       console.log('watch fetch crime data')
       fetchCrimeData();
     }
-  }, { deep: true });
+  }, { deep: true }); */
 
 
 </script>
