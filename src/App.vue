@@ -73,11 +73,39 @@ let crimeTableData = reactive({
 });
 
 const filters = reactive({
-    incidentTypes: {}, // Object with keys as incident types and values as booleans
-    neighborhoods: {}, // Same structure for neighborhoods
-    startDate: null, // Date or string
-    endDate: null, // Date or string
-    maxIncidents: 1000, // Default max incidents
+  incidentTypes: {
+    'Theft': false,
+    'Auto Theft': false,
+    'Burglary': false,
+    'Assault': false,
+    'Domestic Assault': false,
+    'Sexual Offense': false,
+    'Criminal Damage': false,
+    'Proactive Visit': false,
+    'Narcotics': false,
+  },
+  neighborhoods: {
+    '1': false,
+    '2': false,
+    '3': false,
+    '4': false,
+    '5': false,
+    '6': false,
+    '7': false,
+    '8': false,
+    '9': false,
+    '10': false,
+    '11': false,
+    '12': false,
+    '13': false,
+    '14': false,
+    '15': false,
+    '16': false,
+    '17': false,
+  },
+  startDate: null, // Date or string
+  endDate: null, // Date or string
+  maxIncidents: 1000, // Default max incidents
 });
 
 onMounted(async () => {
@@ -254,7 +282,8 @@ async function fetchAndFilterCrimeData() {
     let filteredData = [];
     try {
         // Attempt to fetch data and wait for the promise to resolve
-        filteredData = await fetchCrimeData(); // Make sure this function returns an array
+        await fetchCrimeData(); // Make sure this function returns an array
+        filteredData = crimeTableData.rows
     } catch (error) {
         console.error('Error fetching crime data:', error);
         // Handle error or set filteredData to a default value
@@ -262,17 +291,21 @@ async function fetchAndFilterCrimeData() {
 
     // Ensure filteredData is not undefined before calling filter on it
     if (filteredData && filteredData.length > 0) {
-      console.log('if and if')
         const bounds = map.leaflet.getBounds(); // Ensure bounds is defined
         const visible = filteredData.filter(crime => {
             const neighborhoodId = crime.neighborhood_number;
             const neighborhoodMarker = map.neighborhood_markers.find(marker => marker.marker === neighborhoodId);
-            if (neighborhoodMarker) {
+
+            // Check if the crime's neighborhood is selected in the filters
+            const isNeighborhoodSelected = filters.neighborhoods[neighborhoodId];
+
+            if (neighborhoodMarker && isNeighborhoodSelected) {
                 const markerLatLng = L.latLng(neighborhoodMarker.location);
                 return bounds.contains(markerLatLng);
             }
             return false;
         });
+        
         crimeTableData.rows = visible;
     } else {
         // Handle the case where filteredData is empty or undefined
@@ -282,7 +315,7 @@ async function fetchAndFilterCrimeData() {
 
 
 // Watch for filter changes and fetch data
-watch(filters, fetchAndFilterCrimeData, { deep: true });
+//watch(filters, fetchAndFilterCrimeData, { deep: true });
 
 
 async function fetchJson(url) {
@@ -457,29 +490,7 @@ async function deleteData(caseNumber) {
 
 
 <template>
-  <!-- Filter UI for incident types -->
-  <div v-for="(value, key) in filters.incidentTypes" :key="key">
-    <input type="checkbox" v-model="filters.incidentTypes[key]" :id="key">
-    <label :for="key">{{ key }}</label>
-  </div>
-
-  <!-- Filter UI for neighborhoods -->
-  <div v-for="(value, key) in filters.neighborhoods" :key="key">
-    <input type="checkbox" v-model="filters.neighborhoods[key]" :id="key">
-    <label :for="key">{{ key }}</label>
-  </div>
-
-  <!-- Date range picker -->
-  <input type="date" v-model="filters.startDate">
-  <input type="date" v-model="filters.endDate">
-
-  <!-- Max incidents input -->
-  <input type="number" v-model="filters.maxIncidents">
-
-  <!-- Optional: Update button -->
-  <button @click="fetchAndFilterCrimeData">Update</button>
-
-
+  
   <!--
      <dialog id="rest-dialog" open>
         <h1 class="dialog-header">St. Paul Crime REST API</h1>
@@ -537,7 +548,6 @@ async function deleteData(caseNumber) {
 
 
     <Teleport to="body">
-      <!-- use the modal component, pass in the prop -->
       <modal :show="showModal" @close="showModal = false">
         <template #header>
           <h3>Insert Crime Form</h3>
@@ -550,13 +560,38 @@ async function deleteData(caseNumber) {
     <button class="modal" id="modal2" @click="showModal2 = true">Delete Case</button>
 
     <Teleport to="body">
-      <!-- use the modal component, pass in the prop -->
       <modal2 :show2="showModal2" @close="showModal2 = false" @delete-success="handleDeleteSuccess">
         <template #header>
           <h3>Insert Crime Form</h3>
         </template>
       </modal2>
     </Teleport>
+
+
+      <!-- Filter UI for incident types -->
+    <div v-for="(value, key) in filters.incidentTypes" :key="key">
+      <input type="checkbox" v-model="filters.incidentTypes[key]" :id="key">
+      <label :for="key">{{ key }}</label>
+    </div>
+
+    <!-- Filter UI for neighborhoods -->
+    <h5 style = "font-size: 1rem">Neighborhoods </h5>
+    <div class="checkbox-container">
+      <div v-for="(value, key) in filters.neighborhoods" :key="key" class="checkbox-item">
+        <input type="checkbox" v-model="filters.neighborhoods[key]" :id="key">
+        <label :for="key">{{ getNeighborhoodNameById(parseInt(key,10)) }}</label>
+      </div>
+    </div>
+
+    <!-- Date range picker -->
+    <input type="date" v-model="filters.startDate">
+    <input type="date" v-model="filters.endDate">
+
+    <!-- Max incidents input -->
+    <input type="number" v-model="filters.maxIncidents">
+
+    <!-- Optional: Update button -->
+    <button @click="fetchAndFilterCrimeData">Update</button>
 
     <!-- Table -->
     <table>
@@ -629,7 +664,7 @@ async function deleteData(caseNumber) {
           </h5>
         </div>
         <div class="cell small-12 medium-12 large-2"></div>
-        <div class="cell medium-auto" style="float: right;"><img src="/public/images/homePic_resized.png" alt="Me" style ='max-height: 15rem' /></div>
+        <div class="cell medium-auto" style="float: right;"><img src="/src/images/homePic_resized.png" alt="Me" style ='max-height: 15rem' /></div>
         <div class="cell small-12 medium-12 large-4">
 
         </div>
@@ -906,4 +941,17 @@ th {
 .grid-x {
   margin: 0;
 }
+
+/* For neighborhood and type checkboxes */
+.checkbox-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    max-width: 50%
+}
+
+.checkbox-item {
+    margin-left: 10px;
+}
+
 </style>
