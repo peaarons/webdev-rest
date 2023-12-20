@@ -180,58 +180,6 @@ async function drawNeighborhoodMarkers(neighborhoods, crimes) {
 
 
 
-/*
-
-//marker for each crime
-async function geocodeAddress(passedInAddress) {
-    try {
-        address = convertAddress(passedInAddress)
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        if (data.length > 0) {
-            return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-        } else {
-            throw new Error('No results found');
-        }
-    } catch (error) {
-        console.error('Geocoding error:', error);
-        return null; // Or handle the error as per your application's needs
-    }
-}
-
-async function drawCrimeMarkers() {
-    for (let crime of crimeTableData.rows) {
-        geocodeAddress(crime.block) // Replace 'address' with the actual key for the address in your data
-            .then(location => {
-                if (location) {
-                    L.marker([location.lat, location.lng]).addTo(map.leaflet).bindPopup(`Crime: ${crime.incident}`);
-                }
-            })
-            .catch(error => {
-                console.error('Error in geocoding:', error);
-                // Handle any geocoding errors here
-            });
-    }
-}
-
-// Call this function after fetching and updating your crime data
-await drawCrimeMarkers();
-
-
-function convertAddress(address) {
-    //finds 'X' chars that are surrounded by digits or word boundaries
-    const regex = /(?<=\b|\d)X(?=\d|\b)/g;
-
-    return address.replace(regex, '0');
-}
-
-
-*/
-
-
  function calculateCrimes(name, crimes, neighborhoods) {
     let crime_count = 0
     crimes.forEach((crime) => {
@@ -243,7 +191,22 @@ function convertAddress(address) {
 }
 
 async function fetchCrimeData() {
-    const incidentsUrl = `http://localhost:8100/incidents`;
+    const incidentsUrl = `http://localhost:8100/incidents?limit=1000`;
+    // Get the current bounds of the map
+  try {
+    const incidentsResponse = await fetchJson(incidentsUrl);
+    // Directly update crimeTableData.rows
+    crimeTableData.rows = incidentsResponse;
+
+    // Log the rows after setting them
+    console.log('Crime table rows after setting:', crimeTableData.rows);
+  } catch (error) {
+    console.error('Error fetching crime data:', error);
+  }
+}
+
+async function fetch20000CrimeData() {
+    const incidentsUrl = `http://localhost:8100/incidents?limit=20000`;
     // Get the current bounds of the map
   try {
     const incidentsResponse = await fetchJson(incidentsUrl);
@@ -281,22 +244,29 @@ async function fetchAndFilterCrimeData() {
   console.log('filter the data')
     let filteredData = [];
     try {
-        // Attempt to fetch data and wait for the promise to resolve
-        await fetchCrimeData(); // Make sure this function returns an array
+        await fetch20000CrimeData();
         filteredData = crimeTableData.rows
     } catch (error) {
         console.error('Error fetching crime data:', error);
-        // Handle error or set filteredData to a default value
     }
 
-    // Ensure filteredData is not undefined before calling filter on it
-    if (filteredData && filteredData.length > 0) {
-        const bounds = map.leaflet.getBounds(); // Ensure bounds is defined
-        const visible = filteredData.filter(crime => {
+    //check if any neighborhoods are selected
+    let existsSelectedN = false
+    for(let i=0;i<17;i++){
+      if(filters.neighborhoods[i] == true){
+        existsSelectedN = true
+        break
+      }
+    }
+
+    // make sure filteredData is not undefined before calling filter on it
+    if (filteredData && filteredData.length > 0 && existsSelectedN) {
+        const bounds = map.leaflet.getBounds();
+        const visibleN = crimeTableData.rows.filter(crime => {
             const neighborhoodId = crime.neighborhood_number;
             const neighborhoodMarker = map.neighborhood_markers.find(marker => marker.marker === neighborhoodId);
 
-            // Check if the crime's neighborhood is selected in the filters
+            // check if the crime's neighborhood is selected in the filters
             const isNeighborhoodSelected = filters.neighborhoods[neighborhoodId];
 
             if (neighborhoodMarker && isNeighborhoodSelected) {
@@ -306,16 +276,91 @@ async function fetchAndFilterCrimeData() {
             return false;
         });
         
-        crimeTableData.rows = visible;
-    } else {
-        // Handle the case where filteredData is empty or undefined
-        crimeTableData.rows = [];
+        crimeTableData.rows = visibleN;
     }
+
+    //check if incident type selected
+    let existsSelectedT = false
+    for (let key in filters.incidentTypes){
+      if(filters.incidentTypes[key]){
+        existsSelectedT = true
+        break
+      }
+    }
+
+    filteredData = crimeTableData.rows
+    //filter by incident type
+    if (filteredData && filteredData.length > 0 && existsSelectedT) {
+        const visibleT = filteredData.filter(crime => {
+          let output = false
+          if (crime.incident == 'Theft' || crime.incident == 'Robbery' || crime.incident == 'Auto Theft'){
+            output = filters.incidentTypes['Theft']
+          }
+          if (crime.incident == 'Auto Theft'){
+            output = output || filters.incidentTypes['Auto Theft']
+          }
+          if (crime.incident == 'Burglary'){
+            output = output || filters.incidentTypes['Burglary']
+          }
+          if (crime.incident == 'Assault' || crime.incident == 'Assault Dom.' || crime.incident == 'Simple Assault Dom.' || crime.incident == 'Agg. Assault' || crime.incident == 'Agg. Assault Dom.'){
+            output = output || filters.incidentTypes['Assault']
+          }
+          if (crime.incident == 'Assault Dom.' || crime.incident == 'Simple Assault Dom.' || crime.incident == 'Agg. Assault Dom.'){
+            output = output || filters.incidentTypes['Domestic Assault']
+          }
+          if (crime.incident == 'Rape' || crime.incident == 'Sexual Assault'){
+            output = output || filters.incidentTypes['Sexual Assault']
+          }
+          if (crime.incident == 'Criminal Damage'){
+            output = output || filters.incidentTypes['Criminal Damage']
+          }
+          if (crime.incident == 'Proactive Visit'){
+            output = output || filters.incidentTypes['Proactive Visit']
+          }
+          if (crime.incident == 'Narcotics'){
+            output = output || filters.incidentTypes['Narcotics']
+          }
+
+          return output
+        });
+        
+        crimeTableData.rows = visibleT;
+    }
+
+    filteredData = crimeTableData.rows
+    //start date
+    if (filteredData && filteredData.length > 0 && filters.startDate!=null) {
+        const visibleS = filteredData.filter(crime => {
+            if(crime.date >= filters.startDate){
+              return true
+            }
+            return false
+        });
+        
+        crimeTableData.rows = visibleS;
+    }
+    filteredData = crimeTableData.rows
+    //end date
+    if (filteredData && filteredData.length > 0 && filters.endDate!=null) {
+        const visibleS = filteredData.filter(crime => {
+            if(crime.date <= filters.endDate){
+              return true
+            }
+            return false
+        });
+        
+        crimeTableData.rows = visibleS;
+    }
+    filteredData = crimeTableData.rows
+    //max number of incidents displayed
+    if (filteredData && filteredData.length > 0 && filters.maxIncidents!=null) {
+      crimeTableData.rows = crimeTableData.rows.slice(0, filters.maxIncidents)
+    } 
+
 }
 
 
-// Watch for filter changes and fetch data
-//watch(filters, fetchAndFilterCrimeData, { deep: true });
+
 
 
 async function fetchJson(url) {
@@ -464,25 +509,9 @@ async function deleteData(caseNumber) {
 
 
   async function handleDeleteSuccess(deletedCaseNumber) {
-    console.log('wopo gangnam style')
     crimeTableData.rows = crimeTableData.rows.filter(row => row.case_number !== deletedCaseNumber);
   }
 
-
-  /*import { watch } from 'vue';
-
-  watch(() => {
-    console.log('watch')
-    if (map.leaflet) {
-      return map.leaflet.getBounds();
-    }
-  }, (newBounds, oldBounds) => {
-    console.log('new bounds, old bounds')
-    if (newBounds !== oldBounds) {
-      console.log('watch fetch crime data')
-      fetchCrimeData();
-    }
-  }, { deep: true }); */
 
 
 </script>
@@ -544,6 +573,7 @@ async function deleteData(caseNumber) {
     </div>
 
     <!--insert crime button-->
+    <div style="display:flex; justify-content:center; width:100%; margin-top:1%">
     <button class="modal" @click="showModal = true">Insert Case</button>
 
 
@@ -557,7 +587,7 @@ async function deleteData(caseNumber) {
 
 
     <!--delete crime button-->
-    <button class="modal" id="modal2" @click="showModal2 = true">Delete Case</button>
+    <button class="modal" id="modal2" @click="showModal2 = true" style="margin-left: 1%">Delete Case</button>
 
     <Teleport to="body">
       <modal2 :show2="showModal2" @close="showModal2 = false" @delete-success="handleDeleteSuccess">
@@ -566,19 +596,21 @@ async function deleteData(caseNumber) {
         </template>
       </modal2>
     </Teleport>
+  </div>
 
 
-      <!-- Filter UI for incident types -->
-    <h5 style = "font-size: 1rem">Incident Types</h5>
-    <div class="checkbox-container">
+  
+      <!-- filter UI for incident types -->
+    <h5 style = "font-size: 1rem; margin-left:1%">Incident Types</h5>
+    <div class="checkbox-container" style="margin-left:1%">
     <div v-for="(value, key) in filters.incidentTypes" :key="key">
       <input type="checkbox" v-model="filters.incidentTypes[key]" :id="key">
       <label :for="key">{{ key }}</label>
     </div>
     </div>
 
-    <!-- Filter UI for neighborhoods -->
-    <h5 style = "font-size: 1rem">Neighborhoods </h5>
+    <!-- filter for neighborhoods -->
+    <h5 style = "font-size: 1rem; margin-left:1%">Neighborhoods </h5>
     <div class="checkbox-container">
       <div v-for="(value, key) in filters.neighborhoods" :key="key" class="checkbox-item">
         <input type="checkbox" v-model="filters.neighborhoods[key]" :id="key">
@@ -586,15 +618,23 @@ async function deleteData(caseNumber) {
       </div>
     </div>
 
-    <!-- Date range picker -->
-    <input type="date" v-model="filters.startDate">
-    <input type="date" v-model="filters.endDate">
+    <!-- Start Date -->
+    <div style="display:flex">
+    <h5 style = "font-size: 1rem; margin-left:1%; display:flex; width:50%">Start Date</h5>
+    <h5 style = "font-size: 1rem; margin-left:1%; display:flex">End Date </h5>
+    </div>
+    <div style="display:flex">
+    <input type="date" v-model="filters.startDate" class="checkbox-container" style="margin-left:1%">
+
+    <input type="date" v-model="filters.endDate" class="checkbox-container" style="margin-left:1%">
+    </div>
 
     <!-- Max incidents input -->
-    <input type="number" v-model="filters.maxIncidents">
+    <h5 style = "font-size: 1rem; margin-left:1%; display:flex">Max Incident Rows</h5>
+    <input type="number" v-model="filters.maxIncidents" class="checkbox-container" style="margin-left:1%">
 
     <!-- Optional: Update button -->
-    <button class="classic-button" @click="fetchAndFilterCrimeData">Update</button>
+    <button class="classic-button" @click="fetchAndFilterCrimeData" style="margin-left:1%">Update</button>
 
     <!-- Table -->
     <table>

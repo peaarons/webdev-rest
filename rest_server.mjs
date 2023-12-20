@@ -131,7 +131,6 @@ app.get('/incidents', (req, res) => {
 `;
 
     let params = [];
-    let limit = 1000;
 
     const addCondition = (condition, value) => {
         sql += count === 0 ? ` WHERE ${condition}` : ` AND ${condition}`;
@@ -165,11 +164,14 @@ app.get('/incidents', (req, res) => {
     }
 
     if (req.query.limit) {
-        limit = parseInt(req.query.limit);
+        let limit = parseInt(req.query.limit);
+        params.push(limit);
+        sql += ' ORDER BY date_time DESC LIMIT ?';
+    }
+    else{
+        sql += ' ORDER BY date_time DESC';
     }
 
-    params.push(limit);
-    sql += ' ORDER BY date_time DESC LIMIT ?';
 
 
     dbSelect(sql, params)
