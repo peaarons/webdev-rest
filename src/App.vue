@@ -2,7 +2,7 @@
 import { reactive, ref, onMounted } from 'vue';
 import Modal from '@/components/insertModal.vue'
 import Modal2 from '@/components/deleteModal.vue'
-import { createUnparsedSourceFile } from 'typescript';
+
 const showModal = ref(false)
 const showModal2 = ref()
 
@@ -466,11 +466,11 @@ const getRowStyle = (code) => {
     const violentCrimeRanges = ['100-300', '400-500', '800-1000'];
     const propertyCrimeRanges = ['300-400', '500-800'];
     if (violentCrimeRanges.some((range) => isCodeInCategory(code, range))) {
-        return { backgroundColor: '#678c76' };
+        return { backgroundColor: '#fcc6bd' };
     } else if (propertyCrimeRanges.some((range) => isCodeInCategory(code, range))) {
-        return { backgroundColor: '#6fb99f' };
+        return { backgroundColor: '#f5f4aa' };
     } else {
-        return { backgroundColor: '#9acbac' };
+        return { backgroundColor: '#a9e0bd' };
     }
 };
 
@@ -667,15 +667,15 @@ async function addCrimeMarkers(crime) {
         <!-- Legend-->
         <div class="legend">
             <div class="legend-item">
-                <div class="legend-color" style="background-color: #678c76;"></div>
+                <div class="legend-color" style="background-color: #fcc6bd;"></div>
                 <div class="legend-label"> Violent Crimes</div>
             </div>
             <div class="legend-item">
-                <div class="legend-color" style="background-color: #6fb99f;"></div>
+                <div class="legend-color" style="background-color: #f5f4aa;"></div>
                 <div class="legend-label">Property Crimes</div>
             </div>
             <div class="legend-item">
-                <div class="legend-color" style="background-color: #9acbac;"></div>
+                <div class="legend-color" style="background-color: #a9e0bd;"></div>
                 <div class="legend-label">Other Crimes </div>
             </div>
         </div>
@@ -912,15 +912,15 @@ th {
 }
 
 .violent-crime {
-    background-color: #678c76;
+    background-color: #c99389;
 }
 
 .property-crime {
-    background-color: #6fb99f;
+    background-color: #e7e6b4;
 }
 
 .other-crime {
-    background-color: #9acbac;
+    background-color: #a1bfac;
 }
 
 .modal {
