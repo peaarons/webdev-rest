@@ -6,6 +6,7 @@ const showModal = ref(false)
 const showModal2=ref()
 
 let location = ref('');
+let neighborhoodMarkersLayer = L.layerGroup(); 
 
 const view = ref('map'); // Initialize view with 'map'
 
@@ -133,16 +134,34 @@ const filters = reactive({
     .catch((error) => {
       console.log('Error:', error);
     });
-  map.leaflet.on('moveend', async () => {
-        updateLocationInput();
-        await fetchCrimeData();
-        updateVisibleCrimes();
-    });
+    const markerGroup = L.layerGroup();
+  map.leaflet.addLayer(markerGroup);
 
-  //etchCrimeData();
-  drawNeighborhoodMarkers(map.neighborhood_markers, crimeTableData.rows);
+  map.leaflet.on('moveend', async () => {
+    updateLocationInput();
+    await fetchCrimeData();
+    updateVisibleCrimes();
+
+    // Clear existing markers in the layer group
+    markerGroup.clearLayers();
+
+    drawNeighborhoodMarkers(map.neighborhood_markers, crimeTableData.rows, markerGroup);
+  });
+  
+
 });
 
+
+//Functions
+function calculateCrimes(name, crimes, neighborhoods) {
+  let crime_count = 0;
+  crimes.forEach((crime) => {
+    if (getNeighborhoodNameById(crime.neighborhood_number, neighborhoods) === name) {
+      crime_count++;
+    }
+  });
+  return crime_count;
+}
 
 
 async function updateVisibleCrimes() {
@@ -166,29 +185,27 @@ async function updateVisibleCrimes() {
 
 
 
-function drawNeighborhoodMarkers(neighborhoods, crimes) {
-  neighborhoods.forEach((marker) => {
-    let marker_name = getNeighborhoodNameById(marker.marker);
-    let marker_crimes = calculateCrimes(marker_name, crimes, neighborhoods);
+function drawNeighborhoodMarkers(markers, crimes) {
+    const zoomLevel = map.leaflet.getZoom();
 
-    // Create a marker with a popup
-    L.marker(marker.location)
-      .addTo(map.leaflet)
-      .bindPopup(`${marker_name}: ${marker_crimes} crimes`)
-    
-  });
+markers.forEach((marker) => {
+  const crimeCount = calculateCrimes(marker.name, crimes);
+  const popupContent = `<strong>${marker.name}</strong><br>Total Crimes: ${crimeCount}`;
+
+  const neighborhoodMarker = L.marker(marker.location)
+    .bindPopup(popupContent);
+
+  // Add marker to the layer group only if it's within a certain zoom level
+  if (zoomLevel >= 14) {
+    markerGroup.addLayer(neighborhoodMarker);
+  } else {
+    map.leaflet.addLayer(neighborhoodMarker);
+  }
+});
 }
 
 
-function calculateCrimes(name, crimes, neighborhoods) {
-    let crime_count = 0
-    crimes.forEach((crime) => {
-        if (getNeighborhoodNameById(crime.neighborhood_number, neighborhoods) === name) {
-            crime_count++;
-        }
-    })
-    return crime_count; 
-}
+
 
 async function fetchCrimeData() {
     const incidentsUrl = `http://localhost:8100/incidents?limit=1000`;
