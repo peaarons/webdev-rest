@@ -8,10 +8,7 @@ const showModal2=ref()
 let location = ref('');
 let neighborhoodMarkersLayer = L.layerGroup(); 
 
-const view = ref('map'); // Initialize view with 'map'
-
-// ... Other variables and functions
-
+const view = ref('map'); 
 const viewMap = () => {
   view.value = 'map';
 };
@@ -470,11 +467,11 @@ const getRowStyle = (code) => {
   const violentCrimeRanges = ['100-300', '400-500', '800-1000'];
   const propertyCrimeRanges = ['300-400', '500-800'];
   if (violentCrimeRanges.some((range) => isCodeInCategory(code, range))) {
-    return { backgroundColor: '#ffcccc' }; // Muted red
+    return { backgroundColor: '#678c76' };
   } else if (propertyCrimeRanges.some((range) => isCodeInCategory(code, range))) {
-    return { backgroundColor: '#fff4cc' }; // Muted yellow
+    return { backgroundColor: '#6fb99f' }; 
   } else {
-    return { backgroundColor: '#ccffcc' }; // Muted green
+    return { backgroundColor: '#9acbac' };
   }
 };
 
@@ -548,28 +545,12 @@ async function deleteData(caseNumber) {
   <div v-show="view === 'map'">
     <div class="grid-container">
       <div class="grid-x grid-padding-x">
-        <label class="dialog-label">Location: </label>
         <input id="dialog-loc" class="dialog-input" v-model="location" placeholder="Enter a location" />
-        <button class="button cell" type="button" @click="closeGo()">GO</button>
+        <button class="button cell" type="button" @click="closeGo()" style="background-color: #57BA98; color: #ffffff;">GO</button>
       </div>
       <div id="leafletmap" class="cell auto"></div>
     </div>
 
-    <!-- Legend-->
-    <div class="legend">
-      <div class="legend-item">
-        <div class="legend-color" style="background-color: #ffcccc;"></div>
-        <div class="legend-label"> Violent Crimes</div>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background-color: #fff4cc;"></div>
-        <div class="legend-label">Property Crimes</div>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background-color: #ccffcc;"></div>
-        <div class="legend-label">Other Crimes </div>
-      </div>
-    </div>
 
     <!--insert crime button-->
     <div style="display:flex; justify-content:center; width:100%; margin-top:1%">
@@ -599,23 +580,27 @@ async function deleteData(caseNumber) {
 
 
   
-      <!-- filter UI for incident types -->
-    <h5 style = "font-size: 1rem; margin-left:1%">Incident Types</h5>
-    <div class="checkbox-container" style="margin-left:1%">
-    <div v-for="(value, key) in filters.incidentTypes" :key="key">
+  <!-- Filter UI for incident types -->
+<div class="filter-section">
+  <h5 class="filter-header">Incident Types</h5>
+  <div class="checkbox-container">
+    <div v-for="(value, key) in filters.incidentTypes" :key="key" class="checkbox-item">
       <input type="checkbox" v-model="filters.incidentTypes[key]" :id="key">
       <label :for="key">{{ key }}</label>
     </div>
-    </div>
+  </div>
+</div>
 
-    <!-- filter for neighborhoods -->
-    <h5 style = "font-size: 1rem; margin-left:1%">Neighborhoods </h5>
-    <div class="checkbox-container">
-      <div v-for="(value, key) in filters.neighborhoods" :key="key" class="checkbox-item">
-        <input type="checkbox" v-model="filters.neighborhoods[key]" :id="key">
-        <label :for="key">{{ getNeighborhoodNameById(parseInt(key, 10)) }}</label>
-      </div>
+<!-- Filter for neighborhoods -->
+<div class="filter-section">
+  <h5 class="filter-header">Neighborhoods</h5>
+  <div class="checkbox-container">
+    <div v-for="(value, key) in filters.neighborhoods" :key="key" class="checkbox-item">
+      <input type="checkbox" v-model="filters.neighborhoods[key]" :id="key">
+      <label :for="key">{{ getNeighborhoodNameById(parseInt(key, 10)) }}</label>
     </div>
+  </div>
+</div>
 
     <!-- Start Date -->
     <div style="display:flex">
@@ -634,6 +619,25 @@ async function deleteData(caseNumber) {
 
     <!-- Optional: Update button -->
     <button class="classic-button" @click="fetchAndFilterCrimeData" style="margin-left:1%">Update</button>
+
+
+
+    <!-- Legend-->
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #678c76;"></div>
+        <div class="legend-label"> Violent Crimes</div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #6fb99f;"></div>
+        <div class="legend-label">Property Crimes</div>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #9acbac;"></div>
+        <div class="legend-label">Other Crimes </div>
+      </div>
+    </div>
+
 
     <!-- Table -->
     <table>
@@ -865,22 +869,19 @@ th {
 }
 
 .violent-crime {
-  background-color: #ffcccc;
-  /* Muted red */
+  background-color: #678c76;
 }
 
 .property-crime {
-  background-color: #fff4cc;
-  /* Muted yellow */
+  background-color: #6fb99f;
 }
 
 .other-crime {
-  background-color: #ccffcc;
-  /* Muted green */
+  background-color: #9acbac;
 }
 
 .modal {
-  background-color: #4CAF50;
+  background-color: #3a713c;
   border: none;
   color: white;
   padding: 15px 32px;
@@ -894,19 +895,17 @@ th {
 }
 
 .modal:hover {
-  background-color: #2f7432;
+  background-color: #628f63;
 }
 
-#modal2 {
-  background-color: #c30101
-}
+
 
 #modal2:hover {
-  background-color: #8f0000
+  background-color: rgb(62, 84, 66)
 }
 
 #delete-button {
-  background-color: #29b0bd;
+  background-color: #2a3435;
   border: none;
   color: white;
   padding: 3px 5px;
@@ -921,17 +920,15 @@ th {
 }
 
 #modal2 {
-  background-color: #c30101
+  background-color: #2a3435
 }
 
-#modal2:hover {
-  background-color: #8f0000
-}
+
 
 
 
 .colorful-banner {
-  background: linear-gradient(to right, #419361, rgb(147, 228, 152));
+  background: #182628;
   /* Gradient with colorful background */
   text-align: center;
   padding: 5px 0;
@@ -944,7 +941,7 @@ th {
 }
 
 .navigation-button {
-  background: #032d1c;
+  background: #1f6e52;
   /* Color for the navigation buttons */
   color: #fff;
   /* Text color for better contrast */
@@ -953,13 +950,13 @@ th {
 }
 
 .navigation-button.selected {
-  background: #5c6c67;
+  background: #3e4e49;
   ;
   /* Color for the selected navigation button */
 }
 
 .navigation-button.unselected:hover {
-  background: #125e45;
+  background: #3B945E;
   /* Color for the hover effect on unselected buttons */
 }
 
@@ -990,6 +987,24 @@ th {
     background-color: #D4D4D4;
     box-shadow: 0 4px 4px rgba(0, 0, 0, 0.2);
 }
+
+.filter-section {
+    width: 100%;
+    margin-bottom: 1em;
+  }
+
+  .filter-header {
+    font-size: 1rem;
+  }
+
+  .checkbox-container {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .checkbox-item {
+    margin-right: 1em;
+  }
 
 /* isaiah was here */
 
