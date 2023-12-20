@@ -1,15 +1,11 @@
 <script setup>
-import { reactive, ref, onMounted, watch } from 'vue';
+import { reactive, ref, onMounted } from 'vue';
 import Modal from '@/components/insertModal.vue'
 import Modal2 from '@/components/deleteModal.vue'
 const showModal = ref(false)
 const showModal2=ref()
 
-let crime_url = ref('');
-let dialog_err = ref(false);
-
 let location = ref('');
-let neighborhoodMarkers = [];
 
 const view = ref('map'); // Initialize view with 'map'
 
@@ -108,8 +104,9 @@ const filters = reactive({
   maxIncidents: 1000, // Default max incidents
 });
 
-onMounted(async () => {
-  // Create Leaflet map (set bounds and valid zoom levels)
+// Vue callback for once <template> HTML has been added to web page
+  onMounted(() => {
+  // Create Leaflet map (set bounds and valied zoom levels)
   map.leaflet = L.map('leafletmap').setView([map.center.lat, map.center.lng], map.zoom);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -117,70 +114,73 @@ onMounted(async () => {
     maxZoom: 18
   }).addTo(map.leaflet);
   map.leaflet.setMaxBounds([[44.883658, -93.217977], [45.008206, -92.993787]]);
-  map.leaflet.on('moveend', updateLocationInput);
- 
+  
 
   // Get boundaries for St. Paul neighborhoods
   let district_boundary = new L.geoJson();
 
-  try {
-    const response = await fetch('data/StPaulDistrictCouncil.geojson');
-    const result = await response.json();
-
-    result.features.forEach((value) => {
-      district_boundary.addData(value);
-      // Update the value of the location box to the current address
-      district_boundary.addTo(map.leaflet);
+  fetch('data/StPaulDistrictCouncil.geojson')
+    .then((response) => {
+      return response.json();
+    })
+    .then((result) => {
+      result.features.forEach((value) => {
+        district_boundary.addData(value);
+        //update the value of the location box to the current address
+        district_boundary.addTo(map.leaflet);
+      });
+    })
+    .catch((error) => {
+      console.log('Error:', error);
+    });
+  map.leaflet.on('moveend', async () => {
+        updateLocationInput();
+        await fetchCrimeData();
+        updateVisibleCrimes();
     });
 
- 
-    drawNeighborhoodMarkers(map.neighborhood_markers, crimeTableData.rows);
-   
-    map.leaflet.on('moveend', moveMap);
-    map.leaflet.on('moveend', showCrimeOnMap);
-    await fetchCrimeData();
-
-   
-  } catch (error) {
-    console.log('Error:', error);
-  }
+  //etchCrimeData();
+  drawNeighborhoodMarkers(map.neighborhood_markers, crimeTableData.rows);
 });
 
-function moveMap() {
-  map.bounds.nw = map.leaflet.getBounds().getNorthWest();
-  map.bounds.se = map.leaflet.getBounds().getSouthEast();
-  map.center = map.leaflet.getCenter();
-  if(map.center>=17){
-    fetchCrimeData
-  }
+
+
+async function updateVisibleCrimes() {
+    const bounds = map.leaflet.getBounds();
+    const visible = crimeTableData.rows.filter(crime => {
+        const neighborhoodId = crime.neighborhood_number;
+        // Find the corresponding marker for the neighborhood
+        const neighborhoodMarker = map.neighborhood_markers.find(marker => marker.marker === neighborhoodId);
+        // Check if the marker is within the map bounds
+        if (neighborhoodMarker) {
+            const markerLatLng = L.latLng(neighborhoodMarker.location);
+            return bounds.contains(markerLatLng);
+        }
+        return false;
+    });
+    crimeTableData.rows = visible;
+  
+    console.log("visibleCrimes count: ", visible.length);
 }
 
 
-async function drawNeighborhoodMarkers(neighborhoods, crimes) {
-  // Clear existing markers
-  neighborhoodMarkers.forEach(marker => marker.remove());
-  neighborhoodMarkers = [];
 
+
+function drawNeighborhoodMarkers(neighborhoods, crimes) {
   neighborhoods.forEach((marker) => {
     let marker_name = getNeighborhoodNameById(marker.marker);
     let marker_crimes = calculateCrimes(marker_name, crimes, neighborhoods);
 
     // Create a marker with a popup
-    const newMarker = L.marker(marker.location)
+    L.marker(marker.location)
       .addTo(map.leaflet)
       .bindPopup(`${marker_name}: ${marker_crimes} crimes`)
-      .on('click', () => {
-        // Handle marker click if needed
-      });
-
-    neighborhoodMarkers.push(newMarker);
+    
   });
 }
 
 
-
-
- function calculateCrimes(name, crimes, neighborhoods) {
+function calculateCrimes(name, crimes, neighborhoods) {
     let crime_count = 0
     crimes.forEach((crime) => {
         if (getNeighborhoodNameById(crime.neighborhood_number, neighborhoods) === name) {
@@ -221,23 +221,6 @@ async function fetch20000CrimeData() {
 }
 
 
-
-//update the table to show only the visaible neighbhoods. 
-async function showCrimeOnMap() {
-  if (map.leaflet) { // Check if the map instance exists
-    const bounds = map.leaflet.getBounds();
-    
-    const visibleMarkerIds = map.neighborhood_markers
-      .filter(marker => {
-        const markerLatLng = L.latLng(marker.location);
-        return bounds.contains(markerLatLng);
-      })
-      .map(marker => marker.marker);
-
-    // Update crimeTableData.rows with crimes in visible neighborhoods
-    crimeTableData.rows = crimeTableData.rows.filter(crime => visibleMarkerIds.includes(crime.neighborhood_number));
-  }
-}
 
 
 async function fetchAndFilterCrimeData() {
@@ -434,8 +417,8 @@ function locationTest(loc) {
     .catch((error) => {
       console.log('Error:', error);
     });
-    fetchCrimeData()
-    console.log('enter location function')
+  //fetchCrimeData()
+  console.log('enter location function')
 }
 
 //function for updating the location in the input box when you pan around the map. 
@@ -455,7 +438,7 @@ function updateLocationInput() {
     .catch((error) => {
       console.log('Error:', error);
     });
-    fetchCrimeData()
+  //fetchCrimeData()
 }
 
 
@@ -519,7 +502,6 @@ async function deleteData(caseNumber) {
 
 
 <template>
-  
   <!--
      <dialog id="rest-dialog" open>
         <h1 class="dialog-header">St. Paul Crime REST API</h1>
@@ -614,7 +596,7 @@ async function deleteData(caseNumber) {
     <div class="checkbox-container">
       <div v-for="(value, key) in filters.neighborhoods" :key="key" class="checkbox-item">
         <input type="checkbox" v-model="filters.neighborhoods[key]" :id="key">
-        <label :for="key">{{ getNeighborhoodNameById(parseInt(key,10)) }}</label>
+        <label :for="key">{{ getNeighborhoodNameById(parseInt(key, 10)) }}</label>
       </div>
     </div>
 
@@ -680,14 +662,11 @@ async function deleteData(caseNumber) {
         </div>
         <div class="cell small-12 medium-12 large-12">
           <h5>
-            Greetings! I am a soon-to-be graduate from the University of Saint Thomas,
+            I am a soon-to-be graduate from the University of Saint Thomas,
             with a major in Computer Science. Passionate about technology and innovation,
-            I aspire to venture into the realm of Front-End Development upon graduation,
-            aiming to create seamless and engaging user experiences. Alternatively,
+            I aspire to venture into the realm of Front-End Development. Alternatively,
             I am also considering a career path as a Project Manager, where I can leverage
-            my technical skills to oversee and drive successful projects.
-            As I embark on this exciting journey, I look forward to contributing my skills and
-            enthusiasm to the ever-evolving world of technology.
+            my technical skills to oversee projects.
           </h5>
         </div>
         <div class="cell small-12 medium-12 large-2"></div>
@@ -701,9 +680,10 @@ async function deleteData(caseNumber) {
         </div>
         <div class="cell small-12 medium-12 large-6">
           <h5>
-            Hello! I am a Senior at the University of Saint Thomas where I'm double majoring in Computer Science and Data Science. 
+            Hello! I am a Senior at the University of Saint Thomas where I'm double majoring in Computer Science and Data
+            Science.
             I am interested in artificial intelligence and look forward to pursuing a career in this field.
-            In my free time I love to rock climb, listen to music, and watch anime. 
+            In my free time I love to rock climb, listen to music, and watch anime.
           </h5>
         </div>
         <div class="cell small-12 medium-12 large-2"></div>
@@ -987,14 +967,14 @@ th {
 
 /* For neighborhood and type checkboxes */
 .checkbox-container {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    max-width: 50%
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  max-width: 50%
 }
 
 .checkbox-item {
-    margin-left: 10px;
+  margin-left: 10px;
 }
 
 .classic-button {
