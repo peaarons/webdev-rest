@@ -592,7 +592,7 @@ async function addCrimeMarkers(crime) {
             <div class="grid-x grid-padding-x">
                 <input id="dialog-loc" class="dialog-input" v-model="location" placeholder="Enter a location" />
                 <button class="button cell" type="button" @click="closeGo()"
-                    style="background-color: #57BA98; color: #ffffff;">GO</button>
+                    style="background-color: #7cb7a7; color: #ffffff;">GO</button>
             </div>
             <div id="leafletmap" class="cell auto"></div>
         </div>
@@ -971,7 +971,7 @@ th {
 
 
 .colorful-banner {
-    background: #182628;
+    background: #1d6c78;
     text-align: center;
     padding: 5px 0;
 }
@@ -981,19 +981,19 @@ th {
 }
 
 .navigation-button {
-    background: #1f6e52;
+    background: rgb(93, 98, 117);
     color: #fff;
     padding: 10px 20px;
     cursor: pointer;
 }
 
 .navigation-button.selected {
-    background: #3e4e49;
+    background:  rgb(152, 156, 172);
     ;
 }
 
 .navigation-button.unselected:hover {
-    background: #3B945E;
+    background: rgb(113, 115, 120);
 }
 
 .grid-x {
