@@ -524,7 +524,7 @@ watch(() => {
     <input type="number" v-model="filters.maxIncidents">
 
     <!-- Optional: Update button -->
-    <button @click="fetchAndFilterCrimeData">Update</button>
+    <button class="classic-button" @click="fetchAndFilterCrimeData">Update</button>
 
     <!-- Table -->
     <table>
@@ -884,4 +884,18 @@ th {
 .checkbox-item {
   margin-left: 10px;
 }
+
+.classic-button {
+    background-color: #E6E6E6;
+    border: 1px solid #AFAFAF;
+    padding: 5px
+}
+
+.classic-button:hover {
+    background-color: #D4D4D4;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.2);
+}
+
+
+
 </style>
