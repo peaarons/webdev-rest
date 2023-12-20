@@ -623,14 +623,17 @@ async function deleteData(caseNumber) {
 
       <thead>
         <tr>
+            <th>Delete</th>
           <th v-for="column in crimeTableData.columns" :key="column.key">{{ column.name }}</th>
         </tr>
       </thead>
       <tbody>
         <template v-if="crimeTableData.rows.length > 0">
+            
           <tr v-for="row in crimeTableData.rows" :key="row.case_number" :style="getRowStyle(row.code)">
             <!-- Render table rows -->
-            <td>{{ row.case_number }}<button id="delete-button" @click="deleteRow(row.case_number)">x</button></td>
+            <td><button id="delete-button" @click="deleteRow(row.case_number)">x</button></td>
+            <td>{{ row.case_number }}</td>
             <td>{{ row.date }}</td>
             <td>{{ row.time }}</td>
             <td>{{ row.code }}</td>
@@ -890,14 +893,14 @@ th {
 }
 
 #delete-button {
-  background-color: #c30101;
+  background-color: #29b0bd;
   border: none;
   color: white;
   padding: 3px 5px;
   text-align: center;
   text-decoration: none;
   display: inline-block;
-  font-size: 16px;
+  font-size: 1.5rem;
   margin: 4px 2px;
   cursor: pointer;
   border-radius: 5px;
@@ -912,20 +915,7 @@ th {
   background-color: #8f0000
 }
 
-#delete-button {
-  background-color: #c30101;
-  border: none;
-  color: white;
-  padding: 3px 5px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 4px 2px;
-  cursor: pointer;
-  border-radius: 5px;
-  margin-left: 10px;
-}
+
 
 .colorful-banner {
   background: linear-gradient(to right, #419361, rgb(147, 228, 152));
