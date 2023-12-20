@@ -2,6 +2,7 @@
 import { reactive, ref, onMounted } from 'vue';
 import Modal from '@/components/insertModal.vue'
 import Modal2 from '@/components/deleteModal.vue'
+import { createUnparsedSourceFile } from 'typescript';
 const showModal = ref(false)
 const showModal2=ref()
 
@@ -9,7 +10,6 @@ let location = ref('');
 
 const view = ref('map'); // Initialize view with 'map'
 
-// ... Other variables and functions
 
 const viewMap = () => {
   view.value = 'map';
@@ -99,9 +99,9 @@ const filters = reactive({
     '16': false,
     '17': false,
   },
-  startDate: null, // Date or string
-  endDate: null, // Date or string
-  maxIncidents: 1000, // Default max incidents
+  startDate: null,
+  endDate: null,
+  maxIncidents: 1000,
 });
 
 // Vue callback for once <template> HTML has been added to web page
@@ -139,7 +139,6 @@ const filters = reactive({
         updateVisibleCrimes();
     });
 
-  //etchCrimeData();
   drawNeighborhoodMarkers(map.neighborhood_markers, crimeTableData.rows);
 });
 
@@ -172,6 +171,7 @@ function drawNeighborhoodMarkers(neighborhoods, crimes) {
     let marker_crimes = calculateCrimes(marker_name, crimes, neighborhoods);
 
     // Create a marker with a popup
+    console.log(marker.location)
     L.marker(marker.location)
       .addTo(map.leaflet)
       .bindPopup(`${marker_name}: ${marker_crimes} crimes`)
@@ -496,6 +496,52 @@ async function deleteData(caseNumber) {
   }
 
 
+  async function locateAddress(address) {
+    let convertedAddress = convertAddress(address)
+    console.log(convertedAddress)
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(convertedAddress)}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+       
+        if (data.length > 0) {
+            return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+        } else {
+            throw new Error('No results found');
+        }
+    } catch (error) {
+        console.error('Geocoding error:', error);
+        return null;
+    }
+}
+
+async function addCrimeMarkers(crime) {
+        const location = await locateAddress(crime.block);
+        if (location) {
+          console.log(location)
+          L.marker(location)
+          .addTo(map.leaflet)
+          .bindPopup(`Case: ${crime.case_number}`)
+        }
+    }
+
+    function convertAddress(address) {
+      let newAddress = address[0]
+      for(let i = 1; i<length(address)-1; i++){
+
+        if (i<=(length(address)-1)){
+          if ((address[i]==='X' && address[i+1] <= 'A') || (address[i]==='X' && address[i+1] === 'X')){
+
+          }
+        }
+      }
+
+  
+}
+
+
 
 </script>
 
@@ -650,7 +696,6 @@ async function deleteData(caseNumber) {
   </div>
 
   <div v-if="view === 'about'">
-    <!-- Replace this with your actual about the project content: can be done here or by making a new component -->
     <div class="grid-container">
       <div class="grid-x grid-padding-x">
         <h1 class="cell auto">About the Project</h1>
@@ -826,9 +871,7 @@ th {
 .legend {
   display: flex;
   justify-content: center;
-  /* Center horizontally */
   align-items: center;
-  /* Center vertically */
   margin-top: 1rem;
 }
 
@@ -850,17 +893,14 @@ th {
 
 .violent-crime {
   background-color: #ffcccc;
-  /* Muted red */
 }
 
 .property-crime {
   background-color: #fff4cc;
-  /* Muted yellow */
 }
 
 .other-crime {
   background-color: #ccffcc;
-  /* Muted green */
 }
 
 .modal {
@@ -929,22 +969,17 @@ th {
 
 .colorful-banner {
   background: linear-gradient(to right, #419361, rgb(147, 228, 152));
-  /* Gradient with colorful background */
   text-align: center;
   padding: 5px 0;
-  /* Add padding for better visibility */
 }
 
 .banner-title {
   color: #fff;
-  /* Text color for better contrast */
 }
 
 .navigation-button {
   background: #032d1c;
-  /* Color for the navigation buttons */
   color: #fff;
-  /* Text color for better contrast */
   padding: 10px 20px;
   cursor: pointer;
 }
@@ -952,15 +987,12 @@ th {
 .navigation-button.selected {
   background: #5c6c67;
   ;
-  /* Color for the selected navigation button */
 }
 
 .navigation-button.unselected:hover {
   background: #125e45;
-  /* Color for the hover effect on unselected buttons */
 }
 
-/* Remove padding from the grid */
 .grid-x {
   margin: 0;
 }
