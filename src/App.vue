@@ -67,39 +67,39 @@ let crimeTableData = reactive({
 });
 
 const filters = reactive({
-  incidentTypes: {
-    'Theft': false,
-    'Auto Theft': false,
-    'Burglary': false,
-    'Assault': false,
-    'Domestic Assault': false,
-    'Sexual Offense': false,
-    'Criminal Damage': false,
-    'Proactive Visit': false,
-    'Narcotics': false,
-  },
-  neighborhoods: {
-    '1': false,
-    '2': false,
-    '3': false,
-    '4': false,
-    '5': false,
-    '6': false,
-    '7': false,
-    '8': false,
-    '9': false,
-    '10': false,
-    '11': false,
-    '12': false,
-    '13': false,
-    '14': false,
-    '15': false,
-    '16': false,
-    '17': false,
-  },
-  startDate: null,
-  endDate: null,
-  maxIncidents: 1000,
+    incidentTypes: {
+        'Theft': false,
+        'Auto Theft': false,
+        'Burglary': false,
+        'Assault': false,
+        'Domestic Assault': false,
+        'Sexual Offense': false,
+        'Criminal Damage': false,
+        'Proactive Visit': false,
+        'Narcotics': false,
+    },
+    neighborhoods: {
+        '1': false,
+        '2': false,
+        '3': false,
+        '4': false,
+        '5': false,
+        '6': false,
+        '7': false,
+        '8': false,
+        '9': false,
+        '10': false,
+        '11': false,
+        '12': false,
+        '13': false,
+        '14': false,
+        '15': false,
+        '16': false,
+        '17': false,
+    },
+    startDate: null,
+    endDate: null,
+    maxIncidents: 1000,
 });
 
 // Vue callback for once <template> HTML has been added to web page
@@ -506,10 +506,10 @@ async function deleteData(caseNumber) {
 
 async function handleDeleteSuccess(deletedCaseNumber) {
     crimeTableData.rows = crimeTableData.rows.filter(row => row.case_number !== deletedCaseNumber);
-  }
+}
 
 
-  async function locateAddress(address) {
+async function locateAddress(address) {
     let convertedAddress = convertAddress(address)
     console.log(convertedAddress)
     try {
@@ -518,7 +518,7 @@ async function handleDeleteSuccess(deletedCaseNumber) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-       
+
         if (data.length > 0) {
             return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
         } else {
@@ -531,27 +531,27 @@ async function handleDeleteSuccess(deletedCaseNumber) {
 }
 
 async function addCrimeMarkers(crime) {
-        const location = await locateAddress(crime.block);
-        if (location) {
-          console.log(location)
-          L.marker(location)
-          .addTo(map.leaflet)
-          .bindPopup(`Case: ${crime.case_number}`)
+    const location = await locateAddress(crime.block);
+    if (location) {
+        console.log(location)
+        L.marker(location)
+            .addTo(map.leaflet)
+            .bindPopup(`Case: ${crime.case_number}`)
+    }
+}
+
+function convertAddress(address) {
+    let newAddress = address[0]
+    for (let i = 1; i < length(address) - 1; i++) {
+
+        if (i <= (length(address) - 1)) {
+            if ((address[i] === 'X' && address[i + 1] <= 'A') || (address[i] === 'X' && address[i + 1] === 'X')) {
+
+            }
         }
     }
 
-    function convertAddress(address) {
-      let newAddress = address[0]
-      for(let i = 1; i<length(address)-1; i++){
 
-        if (i<=(length(address)-1)){
-          if ((address[i]==='X' && address[i+1] <= 'A') || (address[i]==='X' && address[i+1] === 'X')){
-
-          }
-        }
-      }
-
-  
 }
 
 
@@ -826,6 +826,14 @@ async function addCrimeMarkers(crime) {
                     <br>
                     <br>
                     <h2 class="cell auto">6 Interesting Findings</h2>
+                    <ol>
+                        <li>How many auto-thefts are happening in the middle of the day.  </li>
+                        <li>Some of the incidents didn't have incident attached, they were only categorized by code</li>
+                        <li>The Capitol River neighborhood has the most incidents out of the last 1,000 recorded incideints</li>
+                        <li>On Halloween the inicidents of the police reports were proactive police vistis</li>
+                        <li>Greater East Side + Payne/Phalen had the greatest amount of Narcotics related incidents </li>
+                        <li>The Macalester-Groveland nieghbhood has a lot of non Forced Entry Burglary</li>
+                    </ol>
 
                 </div>
 
@@ -833,6 +841,7 @@ async function addCrimeMarkers(crime) {
                     <br>
                     <br>
                     <h2 class="cell auto">Video Demo</h2>
+                    <iframe width="85%" height="580" src="https://www.youtube.com/embed/-lg6oOjC2MY" frameborder="0" allowfullscreen></iframe>
                 </div>
 
             </div>
@@ -981,14 +990,15 @@ th {
 }
 
 .navigation-button {
-    background: rgb(93, 98, 117);
+    background: rgb(152, 156, 172);
     color: #fff;
     padding: 10px 20px;
     cursor: pointer;
 }
 
 .navigation-button.selected {
-    background:  rgb(152, 156, 172);
+    background:
+        rgb(93, 98, 117);
     ;
 }
 
@@ -1039,5 +1049,4 @@ th {
 .checkbox-item {
     margin-right: 1em;
 }
-
 </style>
