@@ -660,10 +660,10 @@ async function deleteData(caseNumber) {
         <div class="cell small-12 large-12">
           <h2 class="cell auto">About Us</h2>
         </div>
-        <div class="cell small-12 medium-12 large-8">
+        <div class="cell small-12 medium-12 large-12">
           <h3> Prachi Arons </h3>
         </div>
-        <div class="cell small-12 medium-12 large-12">
+        <div class="cell small-6 medium-8 large-8">
           <h5>
             I am a soon-to-be graduate from the University of Saint Thomas,
             with a major in Computer Science. Passionate about technology and innovation,
@@ -671,17 +671,15 @@ async function deleteData(caseNumber) {
             I am also considering a career path as a Project Manager, where I can leverage
             my technical skills to oversee projects.
           </h5>
+          
         </div>
-        <div class="cell small-12 medium-12 large-2"></div>
-        <!-- add image -->
+        <div class="cell small-6 medium-4 large-4"><img src="/src/images/headShot.jpg" alt="Prachi" style ='max-height: 15rem' /></div>
         <div class="cell small-12 medium-12 large-4">
-
         </div>
-
-        <div class="cell small-12 medium-12 large-8">
+        <div class="cell small-12 medium-12 large-12">
           <h3> Isaiah Giebel </h3>
         </div>
-        <div class="cell small-12 medium-12 large-6">
+        <div class="cell small-6 medium-8 large-8">
           <h5>
             Hello! I am a Senior at the University of Saint Thomas where I'm double majoring in Computer Science and Data
             Science.
@@ -689,12 +687,10 @@ async function deleteData(caseNumber) {
             In my free time I love to rock climb, listen to music, and watch anime.
           </h5>
         </div>
-        <div class="cell small-12 medium-12 large-2"></div>
-        <div class="cell medium-auto" style="float: right;"><img src="/src/images/homePic_resized.png" alt="Me" style ='max-height: 15rem' /></div>
+        <div class="cell small-6 medium-4 large-4"><img src="/src/images/homePic_resized.png" alt="Isaiha" style ='max-height: 15rem' /></div>
         <div class="cell small-12 medium-12 large-4">
 
         </div>
-
 
         <div class="cell small-12 large-12">
           <h2 class="cell auto">Tools Used</h2>
