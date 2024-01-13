@@ -3,6 +3,8 @@ import { reactive, ref, onMounted } from 'vue';
 import Modal from '@/components/insertModal.vue'
 import Modal2 from '@/components/deleteModal.vue'
 
+const showFilters = ref(false);
+
 const showModal = ref(false)
 const showModal2 = ref()
 
@@ -51,6 +53,9 @@ let map = reactive(
         ]
     }
 );
+
+
+
 let crimeTableData = reactive({
     columns: [
         { name: 'Case Number', key: 'case_number' },
@@ -554,6 +559,15 @@ function convertAddress(address) {
 
 }
 
+window.onclick = function(event) {
+    let modal = document.getElementById('filterModal');
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
+
+
+
 
 
 </script>
@@ -579,9 +593,9 @@ function convertAddress(address) {
     <!-- Navigation buttons -->
     <div class="grid-container">
         <div class="grid-x grid-padding-x">
-            <p class="cell small-6 text-left navigation-button"
+            <p class="cell small-6 text-center navigation-button"
                 :class="{ 'selected': view === 'map', 'unselected': view !== 'map' }" @click="viewMap">Map</p>
-            <p class="cell small-6 text-right navigation-button"
+            <p class="cell small-6 text-center navigation-button"
                 :class="{ 'selected': view === 'about', 'unselected': view !== 'about' }" @click="viewAbout">About</p>
         </div>
     </div>
@@ -591,8 +605,7 @@ function convertAddress(address) {
         <div class="grid-container">
             <div class="grid-x grid-padding-x">
                 <input id="dialog-loc" class="dialog-input" v-model="location" placeholder="Enter a location" />
-                <button class="button cell" type="button" @click="closeGo()"
-                    style="background-color: #7cb7a7; color: #ffffff;">GO</button>
+                <button class = "go-button" type="button" @click="closeGo()">GO</button>
             </div>
             <div id="leafletmap" class="cell auto"></div>
         </div>
@@ -600,9 +613,8 @@ function convertAddress(address) {
 
         <!--insert crime button-->
         <div style="display:flex; justify-content:center; width:100%; margin-top:1%">
+
             <button class="modal" @click="showModal = true">Insert Case</button>
-
-
             <Teleport to="body">
                 <modal :show="showModal" @close="showModal = false">
                     <template #header>
@@ -614,7 +626,6 @@ function convertAddress(address) {
 
             <!--delete crime button-->
             <button class="modal" id="modal2" @click="showModal2 = true" style="margin-left: 1%">Delete Case</button>
-
             <Teleport to="body">
                 <modal2 :show2="showModal2" @close="showModal2 = false" @delete-success="handleDeleteSuccess">
                     <template #header>
@@ -622,45 +633,50 @@ function convertAddress(address) {
                     </template>
                 </modal2>
             </Teleport>
+
+            <!--filter data button-->
+            <button class="modal" @click="showFilters = !showFilters" style="margin-left: 1%">Filter Data</button>
         </div>
 
 
 
+    <div class="filter-section" v-show="showFilters">
+
         <!-- Filter UI for incident types -->
-        <div class="filter-section">
-            <h5 class="filter-header">Incident Types</h5>
-            <div class="checkbox-container">
-                <div v-for="(value, key) in filters.incidentTypes" :key="key" class="checkbox-item">
-                    <input type="checkbox" v-model="filters.incidentTypes[key]" :id="key">
-                    <label :for="key">{{ key }}</label>
-                </div>
+        <h5 class="filter-header">Incident Types</h5>
+        <div class="checkbox-container">
+            <div v-for="(value, key) in filters.incidentTypes" :key="key" class="checkbox-item">
+                <input type="checkbox" v-model="filters.incidentTypes[key]" :id="key">
+                <label :for="key">{{ key }}</label>
             </div>
         </div>
 
         <!-- Filter for neighborhoods -->
-        <div class="filter-section">
-            <h5 class="filter-header">Neighborhoods</h5>
-            <div class="checkbox-container">
-                <div v-for="(value, key) in filters.neighborhoods" :key="key" class="checkbox-item">
-                    <input type="checkbox" v-model="filters.neighborhoods[key]" :id="key">
-                    <label :for="key">{{ getNeighborhoodNameById(parseInt(key, 10)) }}</label>
-                </div>
+        <h5 class="filter-header">Neighborhoods</h5>
+        <div class="checkbox-container">
+            <div v-for="(value, key) in filters.neighborhoods" :key="key" class="checkbox-item">
+                <input type="checkbox" v-model="filters.neighborhoods[key]" :id="key">
+                <label :for="key">{{ getNeighborhoodNameById(parseInt(key, 10)) }}</label>
             </div>
         </div>
 
         <!-- Start Date -->
-        <div style="display:flex">
-            <h5 style="font-size: 1rem; margin-left:1%; display:flex; width:50%">Start Date</h5>
-            <h5 style="font-size: 1rem; margin-left:1%; display:flex">End Date </h5>
-        </div>
-        <div style="display:flex">
-            <input type="date" v-model="filters.startDate" class="checkbox-container" style="margin-left:1%">
+       
+        <h5 class="filter-header">Start Date</h5>
+        <input type="date" v-model="filters.startDate" class="checkbox-container" >
 
-            <input type="date" v-model="filters.endDate" class="checkbox-container" style="margin-left:1%">
-        </div>
-        <h5 style="font-size: 1rem; margin-left:1%; display:flex">Max Incident Rows</h5>
-        <input type="number" v-model="filters.maxIncidents" class="checkbox-container" style="margin-left:1%">
-        <button class="classic-button" @click="fetchAndFilterCrimeData" style="margin-left:1%">Update</button>
+        <h5 class="filter-header">End Date </h5>
+        <input type="date" v-model="filters.endDate" class="checkbox-container">
+
+        <h5 class="filter-header">Max Incident Rows</h5>
+        <input type="number" v-model="filters.maxIncidents" class="checkbox-container">
+
+        <div class="classic-button-container">
+        <button class="classic-button" @click="fetchAndFilterCrimeData">Update</button>
+        <button class="classic-button" @click="showFilters = !showFilters" style="margin-left:2%">Close Filters</button>
+    </div>
+
+    </div>
 
 
 
@@ -717,8 +733,7 @@ function convertAddress(address) {
 
     <div v-if="view === 'about'">
         <div class="grid-container">
-            <div class="grid-x grid-padding-x">
-                <h1 class="cell auto">About the Project</h1>
+            <div class="grid-x grid-padding-x" >
                 <div class="cell small-12 large-12">
                     <h2 class="cell auto">About Us</h2>
                 </div>
@@ -748,10 +763,10 @@ function convertAddress(address) {
                         and Data
                         Science.
                         I am interested in artificial intelligence and look forward to pursuing a career in this field.
-                        In my free time I love to rock climb, listen to music, and watch anime.
+                        In my free time I love to rock climb, listen to music, and hang out with my friends.
                     </h5>
                 </div>
-                <div class="cell small-6 medium-4 large-4"><img src="/src/images/homePic_resized.png" alt="Isaiha"
+                <div class="cell small-6 medium-4 large-4"><img src="/src/images/homePic_resized.png" alt="Isaiah"
                         style='max-height: 15rem' /></div>
                 <div class="cell small-12 medium-12 large-4">
 
@@ -841,7 +856,7 @@ function convertAddress(address) {
                     <br>
                     <br>
                     <h2 class="cell auto">Video Demo</h2>
-                    <iframe width="85%" height="580" src="https://www.youtube.com/embed/-lg6oOjC2MY" frameborder="0" allowfullscreen></iframe>
+                    <iframe width="85%" height="580" src="https://youtu.be/OcOh97MNuBc" frameborder="0" allowfullscreen></iframe>
                 </div>
 
             </div>
@@ -871,7 +886,8 @@ function convertAddress(address) {
 }
 
 .dialog-input {
-    font-size: 1rem;
+    margin-top:1rem;
+    font-size: 1.2rem;
     width: 100%;
 }
 
@@ -899,9 +915,10 @@ th {
 
 .legend {
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: left;
     margin-top: 1rem;
+    margin-left: 1rem;
 }
 
 .legend-item {
@@ -971,11 +988,13 @@ th {
     margin-left: 10px;
 }
 
+#delete-button:hover{
+    background-color: rgb(62, 84, 66)
+}
+
 #modal2 {
     background-color: #2a3435
 }
-
-
 
 
 
@@ -1007,7 +1026,15 @@ th {
 }
 
 .grid-x {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     margin: 0;
+}
+
+.grid-container{
+    font-size: 1.2rem;
+    padding: 0rem;
 }
 
 .checkbox-container {
@@ -1017,14 +1044,19 @@ th {
     max-width: 50%
 }
 
-.checkbox-item {
-    margin-left: 10px;
-}
+
 
 .classic-button {
     background-color: #E6E6E6;
     border: 1px solid #AFAFAF;
-    padding: 5px
+    padding: 7px;
+    font-weight: bold;
+}
+
+.classic-button-container{
+    display: flex;    
+    width: 50%;
+    justify-content: center;
 }
 
 .classic-button:hover {
@@ -1033,12 +1065,19 @@ th {
 }
 
 .filter-section {
+    display: flex; /* Enable flexbox */
+    flex-direction: column; /* Stack children vertically */
+    align-items: center; /* Center children horizontally */
+    justify-content: center; /* Center children vertically, if needed */
     width: 100%;
-    margin-bottom: 1em;
+    margin-bottom: 3rem;
+    margin-top: 3rem;
 }
 
 .filter-header {
+    width: 50%;
     font-size: 1rem;
+    font-weight: bold;
 }
 
 .checkbox-container {
@@ -1049,4 +1088,24 @@ th {
 .checkbox-item {
     margin-right: 1em;
 }
+
+.go-button:hover{
+    background-color: #4f7b70
+}
+.go-button{
+    background-color: #7cb7a7;
+    font-size: 1rem; 
+    display:flex; 
+    justify-content:center; 
+    width:50%; 
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    color: #ffffff;
+}
+
+h2 {
+    font-weight: bold;
+    margin-top: 2rem;
+}
+
 </style>
