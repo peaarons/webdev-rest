@@ -856,7 +856,7 @@ window.onclick = function(event) {
                     <br>
                     <br>
                     <h2 class="cell auto">Video Demo</h2>
-                    <iframe width="85%" height="580" src="https://youtu.be/OcOh97MNuBc" frameborder="0" allowfullscreen></iframe>
+                    <iframe width="85%" height="580" src="https://www.youtube.com/embed/OcOh97MNuBc" frameborder="0" allowfullscreen></iframe>
                 </div>
 
             </div>
